@@ -13,6 +13,9 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       password: process.env.DB_PASSWORD,
       synchronize: false,
       logging: true,
+      entities: ['dist/src/entities/**/*{.js,.ts}'],
+      migrations: ['dist/migration/**/*{.js,.ts}'],
+      subscribers: ['dist/subscribers/**/*{.js,.ts}'],
     };
   }
 }
