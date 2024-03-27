@@ -33,14 +33,14 @@ describe('AuthService', () => {
         .spyOn(service, 'signUp')
         .mockRejectedValue(
           new HttpException(
-            '이메일을 입력하지 않았습니다.',
+            { message: '이메일을 입력하지 않았습니다.' },
             HttpStatus.BAD_REQUEST,
           ),
         );
 
       await expect(controller.signUp(notInEmailSignUpDto)).rejects.toThrow(
         new HttpException(
-          '이메일을 입력하지 않았습니다.',
+          { message: '이메일을 입력하지 않았습니다.' },
           HttpStatus.BAD_REQUEST,
         ),
       );
@@ -57,14 +57,14 @@ describe('AuthService', () => {
         .spyOn(service, 'signUp')
         .mockRejectedValue(
           new HttpException(
-            '해당 이메일은 이메일 형식이 아닙니다.',
+            { message: '해당 이메일은 이메일 형식이 아닙니다.' },
             HttpStatus.BAD_REQUEST,
           ),
         );
 
       await expect(controller.signUp(notEmailSignUpDto)).rejects.toThrow(
         new HttpException(
-          '해당 이메일은 이메일 형식이 아닙니다.',
+          { message: '해당 이메일은 이메일 형식이 아닙니다.' },
           HttpStatus.BAD_REQUEST,
         ),
       );
@@ -81,14 +81,14 @@ describe('AuthService', () => {
         .spyOn(service, 'signUp')
         .mockRejectedValue(
           new HttpException(
-            '비밀번호를 입력하지 않았습니다.',
+            { message: '비밀번호를 입력하지 않았습니다.' },
             HttpStatus.BAD_REQUEST,
           ),
         );
 
       await expect(controller.signUp(notInPasswordSignUpDto)).rejects.toThrow(
         new HttpException(
-          '비밀번호를 입력하지 않았습니다.',
+          { message: '비밀번호를 입력하지 않았습니다.' },
           HttpStatus.BAD_REQUEST,
         ),
       );
@@ -105,14 +105,14 @@ describe('AuthService', () => {
         .spyOn(service, 'signUp')
         .mockRejectedValue(
           new HttpException(
-            '이름을 입력하지 않았습니다.',
+            { message: '이름을 입력하지 않았습니다.' },
             HttpStatus.BAD_REQUEST,
           ),
         );
 
       await expect(controller.signUp(notInNameSignUpDto)).rejects.toThrow(
         new HttpException(
-          '이름을 입력하지 않았습니다.',
+          { message: '이름을 입력하지 않았습니다.' },
           HttpStatus.BAD_REQUEST,
         ),
       );
@@ -128,8 +128,6 @@ describe('AuthService', () => {
       jest.spyOn(service, 'signUp').mockResolvedValue({ success: true });
 
       const result = await controller.signUp(signUpDto);
-
-      console.log(result);
 
       expect(result).toEqual({ success: true });
     });
