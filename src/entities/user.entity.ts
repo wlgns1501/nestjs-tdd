@@ -4,10 +4,12 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
+@Unique(['email'])
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn({ comment: 'PK', name: 'id' })
   id: number;
