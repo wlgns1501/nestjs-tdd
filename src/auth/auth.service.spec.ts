@@ -4,21 +4,38 @@ import { AuthController } from './auth.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserRepository } from 'src/repositories/user.repository';
 import { CreatedUserDto } from './dtos/createdUser.dto';
+import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
 
 describe('AuthService', () => {
   let service: AuthService;
   let controller: AuthController;
   let userRepository: UserRepository;
+  const dataSource = {
+    createEntityManager: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService, UserRepository],
+      providers: [
+        AuthService,
+        UserRepository,
+        {
+          provide: DataSource,
+          useValue: dataSource,
+        },
+      ],
       controllers: [AuthController],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
     controller = module.get<AuthController>(AuthController);
     userRepository = module.get<UserRepository>(UserRepository);
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
   });
 
   describe('회원가입', () => {
@@ -127,7 +144,7 @@ describe('AuthService', () => {
 
       jest.spyOn(service, 'signUp').mockResolvedValue({ success: true });
 
-      const result = await controller.signUp(signUpDto);
+      const result = await service.signUp(signUpDto);
 
       expect(result).toEqual({ success: true });
     });
