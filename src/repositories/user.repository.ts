@@ -21,6 +21,7 @@ export class UserRepository extends Repository<User> {
       user.email = email;
 
       await queryRunner.manager.save(user);
+      await queryRunner.commitTransaction();
       return user.id;
     } catch (error) {
       await queryRunner.rollbackTransaction();

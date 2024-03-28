@@ -55,7 +55,7 @@ describe('AuthService', () => {
           ),
         );
 
-      await expect(controller.signUp(notInEmailSignUpDto)).rejects.toThrow(
+      await expect(service.signUp(notInEmailSignUpDto)).rejects.toThrow(
         new HttpException(
           { message: '이메일을 입력하지 않았습니다.' },
           HttpStatus.BAD_REQUEST,
@@ -79,7 +79,7 @@ describe('AuthService', () => {
           ),
         );
 
-      await expect(controller.signUp(notEmailSignUpDto)).rejects.toThrow(
+      await expect(service.signUp(notEmailSignUpDto)).rejects.toThrow(
         new HttpException(
           { message: '해당 이메일은 이메일 형식이 아닙니다.' },
           HttpStatus.BAD_REQUEST,
@@ -103,7 +103,7 @@ describe('AuthService', () => {
           ),
         );
 
-      await expect(controller.signUp(notInPasswordSignUpDto)).rejects.toThrow(
+      await expect(service.signUp(notInPasswordSignUpDto)).rejects.toThrow(
         new HttpException(
           { message: '비밀번호를 입력하지 않았습니다.' },
           HttpStatus.BAD_REQUEST,
@@ -127,7 +127,7 @@ describe('AuthService', () => {
           ),
         );
 
-      await expect(controller.signUp(notInNameSignUpDto)).rejects.toThrow(
+      await expect(service.signUp(notInNameSignUpDto)).rejects.toThrow(
         new HttpException(
           { message: '이름을 입력하지 않았습니다.' },
           HttpStatus.BAD_REQUEST,
@@ -135,18 +135,73 @@ describe('AuthService', () => {
       );
     });
 
-    it('회원가입에 성공 했을 경우 userId 반환', async () => {
+    it('중복된 이메일인 경우 HttpException 반환', async () => {
       const signUpDto: CreatedUserDto = {
         email: 'wlgns1501@gmail.com',
         name: 'jihun',
         password: '1234',
       };
 
-      jest.spyOn(service, 'signUp').mockResolvedValue({ success: true });
+      jest
+        .spyOn(userRepository, 'signUp')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '중복된 이메일 입니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(service.signUp(signUpDto)).rejects.toThrow(
+        new HttpException(
+          { message: '중복된 이메일 입니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('access token 만들기 실패 할 경우 error 반환', async () => {
+      const signUpDto: CreatedUserDto = {
+        email: 'wlgns1501@gmail.com',
+        name: 'jihun',
+        password: '1234',
+      };
+
+      jest
+        .spyOn(service, 'signedToken')
+        .mockImplementation(() => Promise.reject('error'));
+
+      jest
+        .spyOn(service, 'signUp')
+        .mockRejectedValue(
+          new HttpException(
+            { message: 'token을 만드는데 실패 하였습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(service.signUp(signUpDto)).rejects.toThrow(
+        new HttpException(
+          { message: 'token을 만드는데 실패 하였습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('회원가입에 성공 했을 경우 userId와 accessToken 반환', async () => {
+      const signUpDto: CreatedUserDto = {
+        email: 'wlgns1501@gmail.com',
+        name: 'jihun',
+        password: '1234',
+      };
+
+      jest.spyOn(service, 'signedToken').mockResolvedValue('token');
+      jest
+        .spyOn(service, 'signUp')
+        .mockResolvedValue({ userId: 1, accessToken: 'token' });
 
       const result = await service.signUp(signUpDto);
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ userId: 1, accessToken: 'token' });
     });
   });
 });
