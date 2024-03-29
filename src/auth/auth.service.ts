@@ -4,6 +4,7 @@ import { UserRepository } from 'src/repositories/user.repository';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { Transactional } from 'typeorm-transactional';
+
 @Injectable()
 export class AuthService {
   constructor(private readonly userRepository: UserRepository) {}

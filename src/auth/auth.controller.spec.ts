@@ -5,12 +5,16 @@ import { AuthService } from './auth.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
 import { response } from 'express';
-import { initializeTransactionalContext } from 'typeorm-transactional';
+import {
+  initializeTransactionalContext,
+  addTransactionalDataSource,
+} from 'typeorm-transactional';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let service: AuthService;
   let userRepository: UserRepository;
+
   const dataSource = {
     createEntityManager: jest.fn(),
   };
@@ -23,14 +27,7 @@ describe('AuthController', () => {
     initializeTransactionalContext();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        UserRepository,
-        {
-          provide: DataSource,
-          useValue: dataSource,
-        },
-      ],
+      providers: [AuthService, UserRepository],
       controllers: [AuthController],
     }).compile();
 

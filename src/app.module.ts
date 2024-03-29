@@ -14,18 +14,17 @@ import { DataSource } from 'typeorm';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      database: process.env.DB_NAME,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      synchronize: false,
-      logging: true,
-      entities: ['dist/src/entities/**/*{.js,.ts}'],
-      migrations: ['dist/migration/**/*{.js,.ts}'],
-      subscribers: ['dist/subscribers/**/*{.js,.ts}'],
+    TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options): Promise<DataSource> => {
+        if (!options) {
+          throw new Error('Invalid options passed');
+        }
+
+        return addTransactionalDataSource({
+          dataSource: new DataSource(options),
+        });
+      },
     }),
     AuthModule,
   ],
