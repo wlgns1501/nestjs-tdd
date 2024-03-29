@@ -4,8 +4,11 @@ import { AuthController } from './auth.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserRepository } from 'src/repositories/user.repository';
 import { CreatedUserDto } from './dtos/createdUser.dto';
-import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
+import {
+  addTransactionalDataSource,
+  initializeTransactionalContext,
+} from 'typeorm-transactional';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -15,7 +18,13 @@ describe('AuthService', () => {
     createEntityManager: jest.fn(),
   };
 
+  jest.mock('typeorm-transactional', () => ({
+    Transactional: () => () => ({}),
+  }));
+
   beforeEach(async () => {
+    initializeTransactionalContext();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -157,6 +166,26 @@ describe('AuthService', () => {
           HttpStatus.BAD_REQUEST,
         ),
       );
+    });
+
+    it('access 토큰 생성 확인', async () => {
+      const signUpDto: CreatedUserDto = {
+        email: 'wlgns1501@gmail.com',
+        name: 'jihun',
+        password: '1234',
+      };
+
+      jest
+        .spyOn(service, 'signedToken')
+        .mockImplementation(() => Promise.resolve('token'));
+
+      jest
+        .spyOn(service, 'signUp')
+        .mockResolvedValue({ userId: 1, accessToken: 'token' });
+
+      await service.signUp(signUpDto);
+
+      expect(service.signedToken).toHaveBeenCalled();
     });
 
     it('access token 만들기 실패 할 경우 error 반환', async () => {

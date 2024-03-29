@@ -8,32 +8,7 @@ export class UserRepository extends Repository<User> {
     super(User, dataSource.createEntityManager());
   }
 
-  async signUp(email: string, password: string, name: string) {
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const user = new User();
-      user.name = name;
-      user.password = password;
-      user.email = email;
-
-      await queryRunner.manager.save(user);
-      await queryRunner.commitTransaction();
-      return user.id;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      if (error.errno === 1062) {
-        throw new HttpException(
-          { message: '중복된 이메일 입니다.' },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    } finally {
-      await queryRunner.release();
-    }
+  async signUp(email: string, password: string, name: string): Promise<User> {
+    return await this.create({ email, password, name }).save();
   }
 }

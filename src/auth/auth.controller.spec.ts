@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
 import { response } from 'express';
+import { initializeTransactionalContext } from 'typeorm-transactional';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -14,7 +15,13 @@ describe('AuthController', () => {
     createEntityManager: jest.fn(),
   };
 
+  jest.mock('typeorm-transactional', () => ({
+    Transactional: () => () => ({}),
+  }));
+
   beforeEach(async () => {
+    initializeTransactionalContext();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -48,7 +55,7 @@ describe('AuthController', () => {
 
       const result = await controller.signUp(signUpDto, response);
 
-      expect(result).toEqual({ userId: 1, accessToken: 'token' });
+      expect(result).toStrictEqual({ userId: 1 });
       expect(service.signUp).toHaveBeenCalledWith(signUpDto);
     });
   });
