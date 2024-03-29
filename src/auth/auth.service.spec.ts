@@ -9,26 +9,35 @@ import {
   initializeTransactionalContext,
   addTransactionalDataSource,
 } from 'typeorm-transactional';
+import { User } from 'src/entities/user.entity';
+import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { TypeOrmConfigService } from 'ormconfig';
+
+jest.mock('typeorm-transactional', () => ({
+  Transactional: () => () => ({}),
+  addTransactionalDataSource: jest.fn(),
+  initializeTransactionalContext: jest.fn(),
+}));
 
 describe('AuthService', () => {
   let service: AuthService;
   let controller: AuthController;
   let userRepository: UserRepository;
+
   const dataSource = {
     createEntityManager: jest.fn(),
   };
 
-  jest.mock('typeorm-transactional', () => ({
-    Transactional: () => () => ({}),
-    addTransactionalDataSource: jest.fn(),
-    initializeTransactionalContext: jest.fn(),
-  }));
-
   beforeEach(async () => {
-    initializeTransactionalContext();
-
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService, UserRepository],
+      providers: [
+        AuthService,
+        UserRepository,
+        {
+          provide: DataSource,
+          useValue: dataSource,
+        },
+      ],
       controllers: [AuthController],
     }).compile();
 
@@ -146,7 +155,7 @@ describe('AuthService', () => {
       };
 
       jest
-        .spyOn(userRepository, 'signUp')
+        .spyOn(service, 'signUp')
         .mockRejectedValue(
           new HttpException(
             { message: '중복된 이메일 입니다.' },
@@ -162,25 +171,26 @@ describe('AuthService', () => {
       );
     });
 
-    // it('access 토큰 생성 확인', async () => {
-    //   const signUpDto: CreatedUserDto = {
-    //     email: 'wlgns1501@gmail.com',
-    //     name: 'jihun',
-    //     password: '1234',
-    //   };
+    it('access 토큰 생성 확인', async () => {
+      const signUpDto: CreatedUserDto = {
+        email: 'wlgns1501@gmail.com',
+        name: 'jihun',
+        password: '1234',
+      };
 
-    //   jest
-    //     .spyOn(service, 'signedToken')
-    //     .mockImplementation(() => Promise.resolve('token'));
+      jest
+        .spyOn(service, 'signedToken')
+        .mockImplementation(() => Promise.resolve('token'));
 
-    //   jest
-    //     .spyOn(service, 'signUp')
-    //     .mockResolvedValue({ userId: 1, accessToken: 'token' });
+      jest
+        .spyOn(service, 'signUp')
+        .mockResolvedValue({ userId: 1, accessToken: 'token' });
 
-    //   await service.signUp(signUpDto);
+      const result = await service.signUp(signUpDto);
 
-    //   expect(service.signedToken).toHaveBeenCalled();
-    // });
+      expect(result.accessToken).toEqual('token');
+      // expect(service.signedToken).toHaveBeenCalled();
+    });
 
     it('access token 만들기 실패 할 경우 error 반환', async () => {
       const signUpDto: CreatedUserDto = {

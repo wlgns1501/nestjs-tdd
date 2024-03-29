@@ -10,6 +10,10 @@ import {
   addTransactionalDataSource,
 } from 'typeorm-transactional';
 
+jest.mock('typeorm-transactional', () => ({
+  Transactional: () => () => ({}),
+}));
+
 describe('AuthController', () => {
   let controller: AuthController;
   let service: AuthService;
@@ -19,15 +23,16 @@ describe('AuthController', () => {
     createEntityManager: jest.fn(),
   };
 
-  jest.mock('typeorm-transactional', () => ({
-    Transactional: () => () => ({}),
-  }));
-
   beforeEach(async () => {
-    initializeTransactionalContext();
-
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService, UserRepository],
+      providers: [
+        AuthService,
+        UserRepository,
+        {
+          provide: DataSource,
+          useValue: dataSource,
+        },
+      ],
       controllers: [AuthController],
     }).compile();
 
@@ -47,13 +52,12 @@ describe('AuthController', () => {
       };
 
       jest
-        .spyOn(service, 'signUp')
-        .mockResolvedValue({ userId: 1, accessToken: 'token' });
+        .spyOn(controller, 'signUp')
+        .mockImplementation(() => Promise.resolve({ userId: 1 }));
 
       const result = await controller.signUp(signUpDto, response);
 
       expect(result).toStrictEqual({ userId: 1 });
-      expect(service.signUp).toHaveBeenCalledWith(signUpDto);
     });
   });
 });

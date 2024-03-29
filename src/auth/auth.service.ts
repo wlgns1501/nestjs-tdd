@@ -4,12 +4,13 @@ import { UserRepository } from 'src/repositories/user.repository';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { Transactional } from 'typeorm-transactional';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async hashPassword(password: string) {
+  async hashPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 9);
   }
 
@@ -21,7 +22,7 @@ export class AuthService {
   async signUp(createdUserDto: CreatedUserDto) {
     const { email, password, name } = createdUserDto;
     let accessToken;
-    let user;
+    let user: User | any;
     const hashedPassword = await this.hashPassword(password);
 
     try {

@@ -26,7 +26,7 @@ export class AuthController {
   async signUp(
     @Body(new CreatedUserPipe()) createdUserDto: CreatedUserDto,
     @Res() response: Response,
-  ) {
+  ): Promise<{ userId: number } | void> {
     const { userId, accessToken } = await this.service.signUp(createdUserDto);
 
     const settledResponse = response.cookie(

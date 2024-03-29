@@ -9,23 +9,34 @@ import {
   addTransactionalDataSource,
   getDataSourceByName,
 } from 'typeorm-transactional';
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
-      dataSourceFactory: async (options): Promise<DataSource> => {
-        if (!options) {
-          throw new Error('Invalid options passed');
-        }
-
+      dataSourceFactory: async (
+        options?: DataSourceOptions,
+      ): Promise<DataSource> => {
+        if (!options) throw new Error('options is undefined');
         return addTransactionalDataSource({
           dataSource: new DataSource(options),
         });
       },
     }),
+
+    // useClass: TypeOrmConfigService,
+    // dataSourceFactory: async (options): Promise<DataSource> => {
+    //   if (!options) {
+    //     throw new Error('Invalid options passed');
+    //   }
+
+    //   return addTransactionalDataSource({
+    //     dataSource: new DataSource(options),
+    //   }).initialize();
+    // },
+
     AuthModule,
   ],
   controllers: [AppController],
