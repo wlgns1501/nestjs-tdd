@@ -4,19 +4,14 @@ import { AuthController } from './auth.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserRepository } from 'src/repositories/user.repository';
 import { CreatedUserDto } from './dtos/createdUser.dto';
-import { DataSource } from 'typeorm';
-import {
-  initializeTransactionalContext,
-  addTransactionalDataSource,
-} from 'typeorm-transactional';
+import { DataSource, QueryFailedError } from 'typeorm';
 import { User } from 'src/entities/user.entity';
-import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
-import { TypeOrmConfigService } from 'ormconfig';
+import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
+import { error } from 'console';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
-  addTransactionalDataSource: jest.fn(),
-  initializeTransactionalContext: jest.fn(),
 }));
 
 describe('AuthService', () => {
@@ -171,6 +166,102 @@ describe('AuthService', () => {
       );
     });
 
+    it('password hash 화 확인', async () => {
+      const signUpDto: CreatedUserDto = {
+        email: 'wlgns1501@gmail.com',
+        name: 'jihun',
+        password: '1234',
+      };
+
+      jest
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation(() => Promise.resolve('HASHED_PASSWORD'));
+
+      const hashPassword = await service.hashPassword(signUpDto.password);
+
+      expect(hashPassword).toEqual('HASHED_PASSWORD');
+    });
+
+    it('user email 중복시 에러 반환', async () => {
+      const duplicatedSignUpDto: CreatedUserDto = {
+        email: 'wlgns1501@gmail.com',
+        name: 'jihun',
+        password: '1234',
+      };
+
+      jest
+        .spyOn(service, 'hashPassword')
+        .mockImplementation(() => Promise.resolve('HASHED_PASSWORD'));
+
+      jest.spyOn(userRepository, 'signUp').mockRejectedValue(
+        new QueryFailedError(
+          'INSERT INTO `user`(`id`, `name`, `email`, `password`, `created_at`, `updated_at`) VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT)',
+          [
+            duplicatedSignUpDto.name,
+            duplicatedSignUpDto.email,
+            'HASHED_PASSWORD',
+          ],
+          {
+            code: 'ER_DUP_ENTRY',
+            errno: 1062,
+            sqlState: '23000',
+            sqlMessage: `Duplicate entry '${duplicatedSignUpDto.email}' for key 'user.IDX_e12875dfb3b1d92d7d7c5377e2'`,
+            sql: "INSERT INTO `user`(`id`, `name`, `email`, `password`, `created_at`, `updated_at`) VALUES (DEFAULT, 'jihun', 'wlgns1501@gmail.com', 'HASHED_PASSWORD', DEFAULT, DEFAULT)",
+          },
+        ),
+      );
+
+      jest
+        .spyOn(service, 'signUp')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '중복된 이메일 입니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      try {
+        await userRepository.signUp(
+          duplicatedSignUpDto.email,
+          'HASHED_PASSWORD',
+          duplicatedSignUpDto.name,
+        );
+      } catch (error) {
+        expect(error.errno).toEqual(1062);
+      }
+
+      await expect(
+        userRepository.signUp(
+          duplicatedSignUpDto.email,
+          'HASHED_PASSWORD',
+          duplicatedSignUpDto.name,
+        ),
+      ).rejects.toThrow(
+        new QueryFailedError(
+          'INSERT INTO `user`(`id`, `name`, `email`, `password`, `created_at`, `updated_at`) VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT)',
+          [
+            duplicatedSignUpDto.name,
+            duplicatedSignUpDto.email,
+            'HASHED_PASSWORD',
+          ],
+          {
+            code: 'ER_DUP_ENTRY',
+            errno: 1062,
+            sqlState: '23000',
+            sqlMessage: `Duplicate entry '${duplicatedSignUpDto.email}' for key 'user.IDX_e12875dfb3b1d92d7d7c5377e2'`,
+            sql: "INSERT INTO `user`(`id`, `name`, `email`, `password`, `created_at`, `updated_at`) VALUES (DEFAULT, 'jihun', 'wlgns1501@gmail.com', 'HASHED_PASSWORD', DEFAULT, DEFAULT)",
+          },
+        ),
+      );
+
+      await expect(service.signUp(duplicatedSignUpDto)).rejects.toThrow(
+        new HttpException(
+          { message: '중복된 이메일 입니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
     it('access 토큰 생성 확인', async () => {
       const signUpDto: CreatedUserDto = {
         email: 'wlgns1501@gmail.com',
@@ -179,17 +270,12 @@ describe('AuthService', () => {
       };
 
       jest
-        .spyOn(service, 'signedToken')
+        .spyOn(jwt, 'sign')
         .mockImplementation(() => Promise.resolve('token'));
 
-      jest
-        .spyOn(service, 'signUp')
-        .mockResolvedValue({ userId: 1, accessToken: 'token' });
+      const token = await service.signedToken(1);
 
-      const result = await service.signUp(signUpDto);
-
-      expect(result.accessToken).toEqual('token');
-      // expect(service.signedToken).toHaveBeenCalled();
+      expect(token).toEqual('token');
     });
 
     it('access token 만들기 실패 할 경우 error 반환', async () => {
@@ -198,6 +284,16 @@ describe('AuthService', () => {
         name: 'jihun',
         password: '1234',
       };
+
+      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
+      jest.spyOn(userRepository, 'signUp').mockResolvedValue({
+        id: 1,
+        name: signUpDto.name,
+        password: 'HASHED_PASSWORD',
+        email: signUpDto.email,
+        created_at: new Date(),
+        updated_at: new Date(),
+      } as User);
 
       jest
         .spyOn(service, 'signedToken')
@@ -227,14 +323,27 @@ describe('AuthService', () => {
         password: '1234',
       };
 
+      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
+      jest.spyOn(userRepository, 'signUp').mockResolvedValue({
+        id: 1,
+        name: signUpDto.name,
+        password: 'HASHED_PASSWORD',
+        email: signUpDto.email,
+        created_at: new Date(),
+        updated_at: new Date(),
+      } as User);
       jest.spyOn(service, 'signedToken').mockResolvedValue('token');
       jest
         .spyOn(service, 'signUp')
         .mockResolvedValue({ userId: 1, accessToken: 'token' });
 
       const result = await service.signUp(signUpDto);
+      await service.hashPassword(signUpDto.password);
+      await service.signedToken(1);
 
       expect(result).toEqual({ userId: 1, accessToken: 'token' });
+      expect(service.hashPassword).toHaveBeenCalledWith(signUpDto.password);
+      expect(service.signedToken).toHaveBeenCalledWith(1);
     });
   });
 });
