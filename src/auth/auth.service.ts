@@ -15,6 +15,10 @@ export class AuthService {
     return await bcrypt.hash(password, 9);
   }
 
+  async validPassword(password: string, hashedPassword: string) {
+    return await bcrypt.compare(password, hashedPassword);
+  }
+
   async signedToken(userId: number): Promise<string> {
     return jwt.sign(String(userId), process.env.JWT_SECRET);
   }
@@ -40,6 +44,30 @@ export class AuthService {
   }
 
   async signIn(signInDto: SignInDto) {
-    return 'aa';
+    const { email, password } = signInDto;
+
+    const user = await this.userRepository.getUserByEmail(email);
+
+    if (!user) {
+      throw new HttpException(
+        { message: '해당 유저는 존재하지 않습니다.' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const validPassword = await this.validPassword(password, user.password);
+
+    if (!validPassword) {
+      throw new HttpException(
+        {
+          message: '비밀번호가 일치하지 않습니다.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const token = await this.signedToken(user.id);
+
+    return { accessToken: token };
   }
 }

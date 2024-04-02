@@ -11,4 +11,8 @@ export class UserRepository extends Repository<User> {
   async signUp(email: string, password: string, name: string): Promise<User> {
     return await this.create({ email, password, name }).save();
   }
+
+  async getUserByEmail(email: string) {
+    return await this.findOne({ where: { email } });
+  }
 }

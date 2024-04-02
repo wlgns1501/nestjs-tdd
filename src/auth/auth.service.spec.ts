@@ -329,8 +329,6 @@ describe('AuthService', () => {
 
       jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(null);
 
-      await service.signIn(notUserSignInDto);
-
       await expect(service.signIn(notUserSignInDto)).rejects.toThrow(
         new HttpException(
           { message: '해당 유저는 존재하지 않습니다.' },
@@ -356,8 +354,7 @@ describe('AuthService', () => {
       jest
         .spyOn(bcrypt, 'compare')
         .mockImplementation(() => Promise.resolve(false));
-
-      await service.signIn(invalidPasswordSignInDto);
+      jest.spyOn(service, 'validPassword').mockResolvedValue(false);
 
       await expect(service.signIn(invalidPasswordSignInDto)).rejects.toThrow(
         new HttpException(
@@ -365,6 +362,63 @@ describe('AuthService', () => {
           HttpStatus.BAD_REQUEST,
         ),
       );
+    });
+
+    it('bcrypt 함수 확인', async () => {
+      const signInDto = {
+        email: 'wlgns1501@gmail.com',
+        password: 'test123',
+      };
+
+      const user = {
+        id: 1,
+        email: 'wlgns1501',
+        password: 'HASHED_PASSWORD',
+        name: 'jihun',
+      } as User;
+
+      jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(user);
+      jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(true));
+
+      const result = await service.validPassword(
+        signInDto.password,
+        'HASHED_PASSWORD',
+      );
+
+      expect(result).toBe(true);
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        signInDto.password,
+        'HASHED_PASSWORD',
+      );
+    });
+
+    it('token 생성 확인', async () => {
+      const signInDto = {
+        email: 'wlgns1501@gmail.com',
+        password: 'test123',
+      };
+
+      const user = {
+        id: 1,
+        email: 'wlgns1501',
+        password: 'HASHED_PASSWORD',
+        name: 'jihun',
+      } as User;
+
+      jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(user);
+      jest
+        .spyOn(jwt, 'sign')
+        .mockImplementation(() => Promise.resolve('token'));
+      jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(true));
+
+      const result = await service.signedToken(1);
+
+      expect(result).toEqual('token');
+      expect(jwt.sign).toHaveBeenCalledWith('1', process.env.JWT_SECRET);
     });
 
     it('로그인 성공시 accessToken 반환', async () => {
@@ -387,11 +441,17 @@ describe('AuthService', () => {
       jest
         .spyOn(bcrypt, 'compare')
         .mockImplementation(() => Promise.resolve(true));
+      jest.spyOn(service, 'validPassword').mockResolvedValue(true);
       jest.spyOn(service, 'signedToken').mockResolvedValue('token');
 
       const result = await service.signIn(signInDto);
 
-      expect(result).toEqual('token');
+      expect(result).toEqual({ accessToken: 'token' });
+      expect(service.validPassword).toHaveBeenCalledWith(
+        signInDto.password,
+        'HASHED_PASSWORD',
+      );
+      expect(service.signedToken).toHaveBeenCalledWith(1);
     });
   });
 });
