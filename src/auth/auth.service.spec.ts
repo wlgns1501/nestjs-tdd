@@ -222,7 +222,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('token sign 함수 실행 확인', async () => {
+    it('회원 가입 성공시 userId 반환', async () => {
       const signUpDto = {
         email: 'wlgns1501@gmail.com',
         password: 'aaa',
@@ -243,94 +243,11 @@ describe('AuthService', () => {
         );
       jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
       jest.spyOn(userRepository, 'signUp').mockResolvedValue(createdUser);
-      jest
-        .spyOn(jwt, 'sign')
-        .mockImplementation(() => Promise.resolve('token'));
-
-      const hashedPassword = await service.hashPassword(signUpDto.password);
-      const user = await userRepository.signUp(
-        signUpDto.email,
-        hashedPassword,
-        signUpDto.name,
-      );
-
-      const token = await service.signedToken(user.id);
-
-      expect(token).toEqual('token');
-      expect(jwt.sign).toHaveBeenCalledWith(
-        String(user.id),
-        process.env.JWT_SECRET,
-      );
-    });
-
-    it('token sign화 실패 했을 때 에러 반환', async () => {
-      const signUpDto = {
-        email: 'wlgns1501@gmail.com',
-        password: 'aaa',
-        name: 'jihun',
-      };
-
-      const createdUser = {
-        id: 1,
-        email: 'wlgns1501@gmail.com',
-        password: 'HASHED_PASSWORD',
-        name: 'jihun',
-      } as User;
-
-      jest
-        .spyOn(bcrypt, 'hash')
-        .mockImplementation((password: string, saltRound: number) =>
-          Promise.resolve('HASHED_PASSWORD'),
-        );
-      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
-      jest.spyOn(userRepository, 'signUp').mockResolvedValue(createdUser);
-      jest
-        .spyOn(jwt, 'sign')
-        .mockImplementation(() => Promise.resolve('token'));
-      jest
-        .spyOn(service, 'signedToken')
-        .mockRejectedValue(new jwt.JsonWebTokenError('error'));
-
-      await expect(service.signUp(signUpDto)).rejects.toThrow(
-        new HttpException(
-          { message: 'token을 만드는데 실패 하였습니다.' },
-          HttpStatus.BAD_REQUEST,
-        ),
-      );
-    });
-
-    it('회원 가입 성공시 userId와 token 반환', async () => {
-      const signUpDto = {
-        email: 'wlgns1501@gmail.com',
-        password: 'aaa',
-        name: 'jihun',
-      };
-
-      const createdUser = {
-        id: 1,
-        email: 'wlgns1501@gmail.com',
-        password: 'HASHED_PASSWORD',
-        name: 'jihun',
-      } as User;
-
-      jest
-        .spyOn(bcrypt, 'hash')
-        .mockImplementation((password: string, saltRound: number) =>
-          Promise.resolve('HASHED_PASSWORD'),
-        );
-      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
-      jest.spyOn(userRepository, 'signUp').mockResolvedValue(createdUser);
-      jest
-        .spyOn(jwt, 'sign')
-        .mockImplementation(() => Promise.resolve('token'));
-      jest.spyOn(service, 'signedToken').mockResolvedValue('token');
 
       const result = await service.signUp(signUpDto);
 
       expect(result.userId).toEqual(1);
-      expect(result.accessToken).toEqual('token');
       expect(service.hashPassword).toHaveBeenCalledTimes(1);
-      expect(service.signedToken).toHaveBeenCalledTimes(1);
     });
   });
 });

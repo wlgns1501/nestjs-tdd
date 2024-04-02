@@ -13,6 +13,8 @@ import { CreatedUserDto } from './dtos/createdUser.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
+import { SignInPipe } from './dtos/signIn.pipe';
+import { SignInDto } from './dtos/signIn.dto';
 
 export const ACCESS_TOKEN_EXPIREDSIN = 1000 * 60 * 60 * 24;
 @ApiTags('auth')
@@ -25,13 +27,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async signUp(
     @Body(new CreatedUserPipe()) createdUserDto: CreatedUserDto,
-    @Res() response: Response,
   ): Promise<{ userId: number } | void> {
-    const { userId, accessToken } = await this.service.signUp(createdUserDto);
-
-    const settledResponse = response.cookie('accessToken', accessToken, {
-      expires: new Date(Date.now() + ACCESS_TOKEN_EXPIREDSIN),
-    });
-    settledResponse.send({ userId });
+    return await this.service.signUp(createdUserDto);
   }
 }

@@ -51,19 +51,19 @@ describe('AuthController', () => {
         password: '1234',
       };
 
-      let response: Response;
-
       jest
         .spyOn(service, 'signUp')
-        .mockImplementation(() =>
-          Promise.resolve({ userId: 1, accessToken: 'token' }),
-        );
+        .mockImplementation(() => Promise.resolve({ userId: 1 }));
 
-      // jest.spyOn(response, 'cookie').mockImplementation(() => ;
-
-      const result = await controller.signUp(signUpDto, response);
+      const result = await controller.signUp(signUpDto);
 
       expect(result).toStrictEqual({ userId: 1 });
+    });
+  });
+
+  describe('로그인 : auth/signIn ', () => {
+    it('로그인 성공 시 cookie에 accessToken 반환', async () => {
+      await controller.signIn(logInDto);
     });
   });
 });

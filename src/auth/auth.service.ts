@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { Transactional } from 'typeorm-transactional';
 import { User } from 'src/entities/user.entity';
+import { SignInDto } from './dtos/signIn.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,11 +20,8 @@ export class AuthService {
   }
 
   @Transactional()
-  async signUp(
-    createdUserDto: CreatedUserDto,
-  ): Promise<{ userId: number; accessToken: string }> {
+  async signUp(createdUserDto: CreatedUserDto): Promise<{ userId: number }> {
     const { email, password, name } = createdUserDto;
-    let accessToken;
     let user: User | any;
     const hashedPassword = await this.hashPassword(password);
 
@@ -38,15 +36,6 @@ export class AuthService {
       }
     }
 
-    try {
-      accessToken = await this.signedToken(user.id);
-    } catch (error) {
-      throw new HttpException(
-        { message: 'token을 만드는데 실패 하였습니다.' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    return { userId: user.id, accessToken };
+    return { userId: user.id };
   }
 }
