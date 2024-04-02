@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
+import { ACCESS_TOKEN_EXPIREDSIN, AuthController } from './auth.controller';
 import { CreatedUserDto } from './dtos/createdUser.dto';
 import { AuthService } from './auth.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
-import { response } from 'express';
+import { Response } from 'express';
 import {
   initializeTransactionalContext,
   addTransactionalDataSource,
@@ -51,14 +51,17 @@ describe('AuthController', () => {
         password: '1234',
       };
 
+      let response: Response;
+
       jest
         .spyOn(service, 'signUp')
         .mockImplementation(() =>
           Promise.resolve({ userId: 1, accessToken: 'token' }),
         );
 
+      // jest.spyOn(response, 'cookie').mockImplementation(() => ;
+
       const result = await controller.signUp(signUpDto, response);
-      console.log(result);
 
       expect(result).toStrictEqual({ userId: 1 });
     });
