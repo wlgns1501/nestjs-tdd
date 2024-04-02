@@ -142,57 +142,36 @@ describe('AuthService', () => {
       );
     });
 
-    it('중복된 이메일인 경우 HttpException 반환', async () => {
-      const signUpDto: CreatedUserDto = {
+    it('bcrypt hash 함수 실행 확인', async () => {
+      const signUpDto = {
         email: 'wlgns1501@gmail.com',
+        password: 'aaa',
         name: 'jihun',
-        password: '1234',
-      };
-
-      jest
-        .spyOn(service, 'signUp')
-        .mockRejectedValue(
-          new HttpException(
-            { message: '중복된 이메일 입니다.' },
-            HttpStatus.BAD_REQUEST,
-          ),
-        );
-
-      await expect(service.signUp(signUpDto)).rejects.toThrow(
-        new HttpException(
-          { message: '중복된 이메일 입니다.' },
-          HttpStatus.BAD_REQUEST,
-        ),
-      );
-    });
-
-    it('password hash 화 확인', async () => {
-      const signUpDto: CreatedUserDto = {
-        email: 'wlgns1501@gmail.com',
-        name: 'jihun',
-        password: '1234',
       };
 
       jest
         .spyOn(bcrypt, 'hash')
         .mockImplementation(() => Promise.resolve('HASHED_PASSWORD'));
 
-      const hashPassword = await service.hashPassword(signUpDto.password);
+      const hashedPassword = await service.hashPassword(signUpDto.password);
 
-      expect(hashPassword).toEqual('HASHED_PASSWORD');
+      expect(hashedPassword).toEqual('HASHED_PASSWORD');
+      expect(bcrypt.hash).toHaveBeenCalledWith(signUpDto.password, 9);
     });
 
-    it('user email 중복시 에러 반환', async () => {
-      const duplicatedSignUpDto: CreatedUserDto = {
+    it('이메일 중복으로 회원 가입 실패', async () => {
+      const duplicatedSignUpDto = {
         email: 'wlgns1501@gmail.com',
+        password: 'aaa',
         name: 'jihun',
-        password: '1234',
       };
 
       jest
-        .spyOn(service, 'hashPassword')
-        .mockImplementation(() => Promise.resolve('HASHED_PASSWORD'));
-
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation((password: string, saltRound: number) =>
+          Promise.resolve('HASHED_PASSWORD'),
+        );
+      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
       jest.spyOn(userRepository, 'signUp').mockRejectedValue(
         new QueryFailedError(
           'INSERT INTO `user`(`id`, `name`, `email`, `password`, `created_at`, `updated_at`) VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT)',
@@ -210,25 +189,6 @@ describe('AuthService', () => {
           },
         ),
       );
-
-      jest
-        .spyOn(service, 'signUp')
-        .mockRejectedValue(
-          new HttpException(
-            { message: '중복된 이메일 입니다.' },
-            HttpStatus.BAD_REQUEST,
-          ),
-        );
-
-      try {
-        await userRepository.signUp(
-          duplicatedSignUpDto.email,
-          'HASHED_PASSWORD',
-          duplicatedSignUpDto.name,
-        );
-      } catch (error) {
-        expect(error.errno).toEqual(1062);
-      }
 
       await expect(
         userRepository.signUp(
@@ -262,51 +222,74 @@ describe('AuthService', () => {
       );
     });
 
-    it('access 토큰 생성 확인', async () => {
-      const signUpDto: CreatedUserDto = {
+    it('token sign 함수 실행 확인', async () => {
+      const signUpDto = {
         email: 'wlgns1501@gmail.com',
+        password: 'aaa',
         name: 'jihun',
-        password: '1234',
       };
 
+      const createdUser = {
+        id: 1,
+        email: 'wlgns1501@gmail.com',
+        password: 'HASHED_PASSWORD',
+        name: 'jihun',
+      } as User;
+
+      jest
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation((password: string, saltRound: number) =>
+          Promise.resolve('HASHED_PASSWORD'),
+        );
+      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
+      jest.spyOn(userRepository, 'signUp').mockResolvedValue(createdUser);
       jest
         .spyOn(jwt, 'sign')
         .mockImplementation(() => Promise.resolve('token'));
 
-      const token = await service.signedToken(1);
+      const hashedPassword = await service.hashPassword(signUpDto.password);
+      const user = await userRepository.signUp(
+        signUpDto.email,
+        hashedPassword,
+        signUpDto.name,
+      );
+
+      const token = await service.signedToken(user.id);
 
       expect(token).toEqual('token');
+      expect(jwt.sign).toHaveBeenCalledWith(
+        String(user.id),
+        process.env.JWT_SECRET,
+      );
     });
 
-    it('access token 만들기 실패 할 경우 error 반환', async () => {
-      const signUpDto: CreatedUserDto = {
+    it('token sign화 실패 했을 때 에러 반환', async () => {
+      const signUpDto = {
         email: 'wlgns1501@gmail.com',
+        password: 'aaa',
         name: 'jihun',
-        password: '1234',
       };
 
-      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
-      jest.spyOn(userRepository, 'signUp').mockResolvedValue({
+      const createdUser = {
         id: 1,
-        name: signUpDto.name,
+        email: 'wlgns1501@gmail.com',
         password: 'HASHED_PASSWORD',
-        email: signUpDto.email,
-        created_at: new Date(),
-        updated_at: new Date(),
-      } as User);
+        name: 'jihun',
+      } as User;
 
+      jest
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation((password: string, saltRound: number) =>
+          Promise.resolve('HASHED_PASSWORD'),
+        );
+      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
+      jest.spyOn(userRepository, 'signUp').mockResolvedValue(createdUser);
+      jest
+        .spyOn(jwt, 'sign')
+        .mockImplementation(() => Promise.resolve('token'));
       jest
         .spyOn(service, 'signedToken')
-        .mockImplementation(() => Promise.reject('error'));
-
-      jest
-        .spyOn(service, 'signUp')
-        .mockRejectedValue(
-          new HttpException(
-            { message: 'token을 만드는데 실패 하였습니다.' },
-            HttpStatus.BAD_REQUEST,
-          ),
-        );
+        .mockRejectedValue(new jwt.JsonWebTokenError('error'));
 
       await expect(service.signUp(signUpDto)).rejects.toThrow(
         new HttpException(
@@ -316,34 +299,38 @@ describe('AuthService', () => {
       );
     });
 
-    it('회원가입에 성공 했을 경우 userId와 accessToken 반환', async () => {
-      const signUpDto: CreatedUserDto = {
+    it('회원 가입 성공시 userId와 token 반환', async () => {
+      const signUpDto = {
         email: 'wlgns1501@gmail.com',
+        password: 'aaa',
         name: 'jihun',
-        password: '1234',
       };
 
-      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
-      jest.spyOn(userRepository, 'signUp').mockResolvedValue({
+      const createdUser = {
         id: 1,
-        name: signUpDto.name,
+        email: 'wlgns1501@gmail.com',
         password: 'HASHED_PASSWORD',
-        email: signUpDto.email,
-        created_at: new Date(),
-        updated_at: new Date(),
-      } as User);
-      jest.spyOn(service, 'signedToken').mockResolvedValue('token');
+        name: 'jihun',
+      } as User;
+
       jest
-        .spyOn(service, 'signUp')
-        .mockResolvedValue({ userId: 1, accessToken: 'token' });
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation((password: string, saltRound: number) =>
+          Promise.resolve('HASHED_PASSWORD'),
+        );
+      jest.spyOn(service, 'hashPassword').mockResolvedValue('HASHED_PASSWORD');
+      jest.spyOn(userRepository, 'signUp').mockResolvedValue(createdUser);
+      jest
+        .spyOn(jwt, 'sign')
+        .mockImplementation(() => Promise.resolve('token'));
+      jest.spyOn(service, 'signedToken').mockResolvedValue('token');
 
       const result = await service.signUp(signUpDto);
-      await service.hashPassword(signUpDto.password);
-      await service.signedToken(1);
 
-      expect(result).toEqual({ userId: 1, accessToken: 'token' });
-      expect(service.hashPassword).toHaveBeenCalledWith(signUpDto.password);
-      expect(service.signedToken).toHaveBeenCalledWith(1);
+      expect(result.userId).toEqual(1);
+      expect(result.accessToken).toEqual('token');
+      expect(service.hashPassword).toHaveBeenCalledTimes(1);
+      expect(service.signedToken).toHaveBeenCalledTimes(1);
     });
   });
 });

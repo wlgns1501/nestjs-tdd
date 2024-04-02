@@ -14,7 +14,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Request, Response } from 'express';
 
-export const ACCESS_TOKEN_EXPIRESIN = 1000 * 60 * 60 * 24;
+export const ACCESS_TOKEN_EXPIREDSIN = 1000 * 60 * 60 * 24;
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -29,13 +29,9 @@ export class AuthController {
   ): Promise<{ userId: number } | void> {
     const { userId, accessToken } = await this.service.signUp(createdUserDto);
 
-    const settledResponse = response.cookie(
-      'accessToken',
-      String(accessToken),
-      {
-        expires: new Date(Date.now() + ACCESS_TOKEN_EXPIRESIN),
-      },
-    );
+    const settledResponse = response.cookie('accessToken', accessToken, {
+      expires: new Date(Date.now() + ACCESS_TOKEN_EXPIREDSIN),
+    });
     settledResponse.send({ userId });
   }
 }

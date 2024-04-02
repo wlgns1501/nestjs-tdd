@@ -19,7 +19,9 @@ export class AuthService {
   }
 
   @Transactional()
-  async signUp(createdUserDto: CreatedUserDto) {
+  async signUp(
+    createdUserDto: CreatedUserDto,
+  ): Promise<{ userId: number; accessToken: string }> {
     const { email, password, name } = createdUserDto;
     let accessToken;
     let user: User | any;

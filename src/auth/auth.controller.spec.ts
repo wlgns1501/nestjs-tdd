@@ -52,10 +52,13 @@ describe('AuthController', () => {
       };
 
       jest
-        .spyOn(controller, 'signUp')
-        .mockImplementation(() => Promise.resolve({ userId: 1 }));
+        .spyOn(service, 'signUp')
+        .mockImplementation(() =>
+          Promise.resolve({ userId: 1, accessToken: 'token' }),
+        );
 
       const result = await controller.signUp(signUpDto, response);
+      console.log(result);
 
       expect(result).toStrictEqual({ userId: 1 });
     });
