@@ -418,7 +418,10 @@ describe('AuthService', () => {
       const result = await service.signedToken(1);
 
       expect(result).toEqual('token');
-      expect(jwt.sign).toHaveBeenCalledWith('1', process.env.JWT_SECRET);
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { userId: 1 },
+        process.env.JWT_SECRET,
+      );
     });
 
     it('로그인 성공시 accessToken 반환', async () => {

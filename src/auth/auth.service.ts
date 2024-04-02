@@ -20,7 +20,7 @@ export class AuthService {
   }
 
   async signedToken(userId: number): Promise<string> {
-    return jwt.sign(String(userId), process.env.JWT_SECRET);
+    return jwt.sign({ userId }, process.env.JWT_SECRET);
   }
 
   @Transactional()

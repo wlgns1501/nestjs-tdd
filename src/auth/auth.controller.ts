@@ -34,7 +34,16 @@ export class AuthController {
   @Post('signIn')
   @ApiOperation({ summary: 'signIn' })
   @HttpCode(HttpStatus.OK)
-  async signIn(@Body(new SignInPipe()) signInDto: SignInDto) {
-    return await this.service.signIn(signInDto);
+  async signIn(
+    @Body(new SignInPipe()) signInDto: SignInDto,
+    @Res() response: Response,
+  ) {
+    const { accessToken } = await this.service.signIn(signInDto);
+
+    const settledResponse = response.cookie('accessToken', accessToken, {
+      expires: new Date(Date.now() + ACCESS_TOKEN_EXPIREDSIN),
+    });
+
+    settledResponse.send({ success: true });
   }
 }
