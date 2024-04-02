@@ -250,4 +250,148 @@ describe('AuthService', () => {
       expect(service.hashPassword).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('로그인', () => {
+    it('이메일이 공백일 경우', async () => {
+      const notInEmailSignInDto = {
+        email: '',
+        password: '1234',
+      };
+
+      jest
+        .spyOn(service, 'signIn')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '이메일을 입력하지 않았습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(service.signIn(notInEmailSignInDto)).rejects.toThrow(
+        new HttpException(
+          { message: '이메일을 입력하지 않았습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('이메일이 이메일 형식이 아닐 경우', async () => {
+      const notEmailSignInDto = {
+        email: 'wlgns1501',
+        password: '1234',
+      };
+
+      jest
+        .spyOn(service, 'signIn')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '해당 이메일은 이메일 형식이 아닙니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(service.signIn(notEmailSignInDto)).rejects.toThrow(
+        new HttpException(
+          { message: '해당 이메일은 이메일 형식이 아닙니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('비밀번호가 공백인 경우', async () => {
+      const notInPasswordSignInDto = {
+        email: 'wlgns1501@gmail.com',
+        password: '',
+      };
+
+      jest
+        .spyOn(service, 'signIn')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '비밀번호를 입력하지 않았습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(service.signIn(notInPasswordSignInDto)).rejects.toThrow(
+        new HttpException(
+          { message: '비밀번호를 입력하지 않았습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('유저가 존재하지 않을때 에러 반환', async () => {
+      const notUserSignInDto = {
+        email: 'notUser@notUser.com',
+        password: '123',
+      };
+
+      jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(null);
+
+      await service.signIn(notUserSignInDto);
+
+      await expect(service.signIn(notUserSignInDto)).rejects.toThrow(
+        new HttpException(
+          { message: '해당 유저는 존재하지 않습니다.' },
+          HttpStatus.NOT_FOUND,
+        ),
+      );
+    });
+
+    it('비밀번호가 달라서 로그인 실패시 에러 반환', async () => {
+      const invalidPasswordSignInDto = {
+        email: 'wlgns1501@gmail.com',
+        password: 'nowPassword',
+      };
+
+      const user = {
+        id: 1,
+        email: 'wlgns1501',
+        password: 'HASHED_PASSWORD',
+        name: 'jihun',
+      } as User;
+
+      jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(user);
+      jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(false));
+
+      await service.signIn(invalidPasswordSignInDto);
+
+      await expect(service.signIn(invalidPasswordSignInDto)).rejects.toThrow(
+        new HttpException(
+          { message: '비밀번호가 일치하지 않습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('로그인 성공시 accessToken 반환', async () => {
+      const signInDto = {
+        email: 'wlgns1501@gmail.com',
+        password: 'test123',
+      };
+
+      const user = {
+        id: 1,
+        email: 'wlgns1501',
+        password: 'HASHED_PASSWORD',
+        name: 'jihun',
+      } as User;
+
+      jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(user);
+      jest
+        .spyOn(jwt, 'sign')
+        .mockImplementation(() => Promise.resolve('token'));
+      jest
+        .spyOn(bcrypt, 'compare')
+        .mockImplementation(() => Promise.resolve(true));
+      jest.spyOn(service, 'signedToken').mockResolvedValue('token');
+
+      const result = await service.signIn(signInDto);
+
+      expect(result).toEqual('token');
+    });
+  });
 });

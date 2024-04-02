@@ -38,4 +38,8 @@ export class AuthService {
 
     return { userId: user.id };
   }
+
+  async signIn(signInDto: SignInDto) {
+    return 'aa';
+  }
 }

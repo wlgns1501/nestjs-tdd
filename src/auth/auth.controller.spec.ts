@@ -63,7 +63,9 @@ describe('AuthController', () => {
 
   describe('로그인 : auth/signIn ', () => {
     it('로그인 성공 시 cookie에 accessToken 반환', async () => {
-      await controller.signIn(logInDto);
+      const signInDto = { email: 'wlgns1501@gmail.com', password: 'test123' };
+
+      await controller.signIn(signInDto);
     });
   });
 });

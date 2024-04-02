@@ -30,4 +30,11 @@ export class AuthController {
   ): Promise<{ userId: number } | void> {
     return await this.service.signUp(createdUserDto);
   }
+
+  @Post('signIn')
+  @ApiOperation({ summary: 'signIn' })
+  @HttpCode(HttpStatus.OK)
+  async signIn(@Body(new SignInPipe()) signInDto: SignInDto) {
+    return await this.service.signIn(signInDto);
+  }
 }
