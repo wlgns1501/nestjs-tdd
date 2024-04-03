@@ -4,7 +4,7 @@ import { CreatedUserDto } from './dtos/createdUser.dto';
 import { AuthService } from './auth.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
-import { Response } from 'express';
+import { Response, response } from 'express';
 import {
   initializeTransactionalContext,
   addTransactionalDataSource,
@@ -65,7 +65,21 @@ describe('AuthController', () => {
     it('로그인 성공 시 cookie에 accessToken 반환', async () => {
       const signInDto = { email: 'wlgns1501@gmail.com', password: 'test123' };
 
-      await controller.signIn(signInDto);
+      jest.spyOn(service, 'signIn').mockResolvedValue({ accessToken: 'token' });
+
+      response.cookie = jest.fn().mockReturnThis();
+      response.send = jest.fn();
+      await controller.signIn(signInDto, response);
+
+      expect(response.cookie).toHaveBeenCalledWith(
+        'accessToken',
+        'token',
+        expect.objectContaining({
+          expires: expect.any(Date),
+        }),
+      );
+
+      expect(response.send).toHaveBeenCalledWith({ success: true });
     });
   });
 });

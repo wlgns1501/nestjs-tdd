@@ -19,7 +19,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.use(CookieParser());
+  app.use(CookieParser('dd'));
   await app.listen(3000);
 }
 bootstrap();
