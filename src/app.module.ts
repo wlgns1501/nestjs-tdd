@@ -10,6 +10,7 @@ import {
   getDataSourceByName,
 } from 'typeorm-transactional';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { BoardModule } from './board/board.module';
 
 @Module({
   imports: [
@@ -38,6 +39,8 @@ import { DataSource, DataSourceOptions } from 'typeorm';
     // },
 
     AuthModule,
+
+    BoardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
