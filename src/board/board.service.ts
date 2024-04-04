@@ -14,4 +14,8 @@ export class BoardService {
 
     return { boards };
   }
+
+  async getBoard(boardId: number) {
+    return { board: 'ss' };
+  }
 }
