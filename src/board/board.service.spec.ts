@@ -77,16 +77,16 @@ describe('BoardService', () => {
     it('게시물이 존재하지 않을때 에러 반환', async () => {
       const params = 999;
 
-      jest.spyOn(boardRepository, 'getBoardById').mockResolvedValue(null);
+      jest.spyOn(boardRepository, 'getBoardById').mockResolvedValue(undefined);
 
-      await expect(service.getBoard).rejects.toThrow(
+      await expect(service.getBoard(params)).rejects.toThrow(
         new HttpException(
           { message: '해당 게시물은 존재하지 않습니다.' },
           HttpStatus.NOT_FOUND,
         ),
       );
 
-      expect(boardRepository.getBoardById).toHaveBeenCalledWith(999);
+      expect(boardRepository.getBoardById).toHaveBeenCalledWith(params);
     });
 
     it('게시물이 존재 할 때 게시물 반환', async () => {

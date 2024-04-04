@@ -60,7 +60,7 @@ describe('BoardController', () => {
 
       jest.spyOn(service, 'getBoard').mockResolvedValue(getBoard);
 
-      const board = await controller.getBoards(1);
+      const board = await controller.getBoard(1);
 
       expect(board).toStrictEqual(getBoard);
     });

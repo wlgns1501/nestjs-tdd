@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { BoardRepository } from 'src/repositories/board.repository';
 import { UserRepository } from 'src/repositories/user.repository';
 
@@ -16,6 +16,15 @@ export class BoardService {
   }
 
   async getBoard(boardId: number) {
-    return { board: 'ss' };
+    const board = await this.boardRepository.getBoardById(boardId);
+
+    if (!board) {
+      throw new HttpException(
+        { message: '해당 게시물은 존재하지 않습니다.' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return board;
   }
 }

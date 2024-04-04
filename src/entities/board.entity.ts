@@ -32,4 +32,6 @@ export class Board extends BaseEntity {
 
   @ManyToOne(() => User, (user) => user.boards)
   user: User;
+  @Column({ name: 'userId' })
+  userId: number;
 }
