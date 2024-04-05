@@ -3,6 +3,7 @@ import { BoardRepository } from 'src/repositories/board.repository';
 import { UserRepository } from 'src/repositories/user.repository';
 import { Transactional } from 'typeorm-transactional';
 import { CreateBoardDto } from './dtos/createBoard.dto';
+import { Board } from 'src/entities/board.entity';
 
 @Injectable()
 export class BoardService {
@@ -32,6 +33,16 @@ export class BoardService {
 
   @Transactional()
   async createBoard(createBoardDto: CreateBoardDto, userId: number) {
-    return '';
+    let createdBoard: Board | null;
+    try {
+      createdBoard = await this.boardRepository.createBoard(
+        createBoardDto,
+        userId,
+      );
+    } catch (err) {
+      console.log(err);
+    }
+
+    return { boardId: createdBoard.id };
   }
 }

@@ -3,19 +3,27 @@ import { BoardController } from './board.controller';
 import { BoardService } from './board.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { BoardRepository } from 'src/repositories/board.repository';
-import { DataSource } from 'typeorm';
+import { Auth, DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
+import { AuthGuard } from 'src/guard/auth.guard';
+import { CanActivate } from '@nestjs/common';
+
+jest.mock('typeorm-transactional', () => ({
+  Transactional: () => () => ({}),
+}));
 
 describe('BoardController', () => {
   let controller: BoardController;
   let service: BoardService;
   let userRepository: UserRepository;
   let boardRepository: BoardRepository;
+  let mockGuard: CanActivate;
   const dataSource = {
     createEntityManager: jest.fn(),
   };
 
   beforeEach(async () => {
+    mockGuard = { canActivate: jest.fn(() => true) };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BoardController],
       providers: [
@@ -27,7 +35,10 @@ describe('BoardController', () => {
           useValue: dataSource,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard)
+      .useValue(mockGuard)
+      .compile();
 
     controller = module.get<BoardController>(BoardController);
     service = module.get<BoardService>(BoardService);
@@ -76,11 +87,12 @@ describe('BoardController', () => {
       const userId = 1;
       let req: Request;
 
-      jest.spyOn(service, 'createBoard').mockResolveValue(1);
+      jest.spyOn(mockGuard, 'canActivate').mockResolvedValue(true);
+      jest.spyOn(service, 'createBoard').mockResolvedValue({ boardId: 1 });
 
       const result = await controller.createBoard(createdBoardDto, req);
 
-      expect(result).toBe(1);
+      expect(result).toEqual({ boardId: 1 });
     });
   });
 });

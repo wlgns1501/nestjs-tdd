@@ -5,9 +5,15 @@ import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { BoardController } from './board.controller';
+
+jest.mock('typeorm-transactional', () => ({
+  Transactional: () => () => ({}),
+}));
 
 describe('BoardService', () => {
   let service: BoardService;
+  let controller: BoardController;
   let userRepository: UserRepository;
   let boardRepository: BoardRepository;
   const dataSource = {
@@ -19,17 +25,23 @@ describe('BoardService', () => {
       providers: [
         BoardService,
         BoardRepository,
-        UserRepository,
         {
           provide: DataSource,
           useValue: dataSource,
         },
+        UserRepository,
       ],
+      controllers: [BoardController],
     }).compile();
 
     service = module.get<BoardService>(BoardService);
+    controller = module.get<BoardController>(BoardController);
     userRepository = module.get<UserRepository>(UserRepository);
     boardRepository = module.get<BoardRepository>(BoardRepository);
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
   });
 
   describe('게시물 전체 조회', () => {
@@ -122,6 +134,15 @@ describe('BoardService', () => {
 
       const userId = 1;
 
+      jest
+        .spyOn(service, 'createBoard')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '제목을 입력하지 않았습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
       await expect(
         service.createBoard(notTitleBoardDto, userId),
       ).rejects.toThrow(
@@ -140,6 +161,15 @@ describe('BoardService', () => {
       };
 
       const userId = 1;
+
+      jest
+        .spyOn(service, 'createBoard')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '본문을 입력하지 않았습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
 
       await expect(
         service.createBoard(notContentBoardDto, userId),
@@ -162,11 +192,11 @@ describe('BoardService', () => {
 
       jest
         .spyOn(boardRepository, 'createBoard')
-        .mockImplementation(() => Promise.resolve(createBoardDto));
+        .mockResolvedValue(createBoardDto);
 
       const result = await service.createBoard(createBoardDto, userId);
 
-      expect(result).toEqual(1);
+      expect(result).toEqual({ boardId: 1 });
     });
   });
 });

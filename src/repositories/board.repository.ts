@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreateBoardDto } from 'src/board/dtos/createBoard.dto';
 import { Board } from 'src/entities/board.entity';
 import { DataSource, Repository } from 'typeorm';
 
@@ -18,10 +19,19 @@ export class BoardRepository extends Repository<Board> {
         'b.id as id',
         'b.title as title',
         'b.content as content',
-        `json_object('id' , u.id, 'name', u.name, 'email', u.email)`,
+        `json_object('id' , u.id, 'name', u.name, 'email', u.email) as user`,
       ])
       .leftJoin('user', 'u', `b.userId = u.id`)
       .where(`b.id = ${boardId}`)
       .getRawOne();
+  }
+
+  async createBoard(
+    createBoardDto: CreateBoardDto,
+    userId: number,
+  ): Promise<Board> {
+    const { title, content } = createBoardDto;
+
+    return await this.create({ title, content, userId }).save();
   }
 }
