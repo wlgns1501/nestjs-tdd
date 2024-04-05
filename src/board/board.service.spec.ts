@@ -111,4 +111,62 @@ describe('BoardService', () => {
       expect(boardRepository.getBoardById).toHaveBeenCalledWith(params);
     });
   });
+
+  describe('게시물 생성', () => {
+    it('게시물 title이 존재 하지 않을때 에러 반환', async () => {
+      const notTitleBoardDto = {
+        title: '',
+        content: 'first board',
+        userId: 1,
+      };
+
+      const userId = 1;
+
+      await expect(
+        service.createBoard(notTitleBoardDto, userId),
+      ).rejects.toThrow(
+        new HttpException(
+          { message: '제목을 입력하지 않았습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('게시물 본문이 존재 하지 않을때 에러 반환', async () => {
+      const notContentBoardDto = {
+        title: 'first board',
+        content: '',
+        userId: 1,
+      };
+
+      const userId = 1;
+
+      await expect(
+        service.createBoard(notContentBoardDto, userId),
+      ).rejects.toThrow(
+        new HttpException(
+          { message: '본문을 입력하지 않았습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('게시물 생성 후 게시물 id 반환', async () => {
+      const createBoardDto = {
+        title: 'first board',
+        content: 'first board',
+        userId: 1,
+      } as Board;
+
+      const userId = 1;
+
+      jest
+        .spyOn(boardRepository, 'createBoard')
+        .mockImplementation(() => Promise.resolve(createBoardDto));
+
+      const result = await service.createBoard(createBoardDto, userId);
+
+      expect(result).toEqual(1);
+    });
+  });
 });

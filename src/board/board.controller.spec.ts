@@ -65,4 +65,22 @@ describe('BoardController', () => {
       expect(board).toStrictEqual(getBoard);
     });
   });
+
+  describe('게시물 생성 /board', () => {
+    it('게시물 생성 성공시 게시물 반환', async () => {
+      const createdBoardDto = {
+        id: 1,
+        title: 'first board',
+        content: 'first board',
+      } as Board;
+      const userId = 1;
+      let req: Request;
+
+      jest.spyOn(service, 'createBoard').mockResolveValue(1);
+
+      const result = await controller.createBoard(createdBoardDto, req);
+
+      expect(result).toBe(1);
+    });
+  });
 });

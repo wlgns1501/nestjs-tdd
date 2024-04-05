@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { BoardRepository } from 'src/repositories/board.repository';
 import { UserRepository } from 'src/repositories/user.repository';
+import { Transactional } from 'typeorm-transactional';
+import { CreateBoardDto } from './dtos/createBoard.dto';
 
 @Injectable()
 export class BoardService {
@@ -26,5 +28,10 @@ export class BoardService {
     }
 
     return board;
+  }
+
+  @Transactional()
+  async createBoard(createBoardDto: CreateBoardDto, userId: number) {
+    return '';
   }
 }
