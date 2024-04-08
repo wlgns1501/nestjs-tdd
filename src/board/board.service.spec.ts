@@ -483,4 +483,75 @@ describe('BoardService', () => {
       } catch (err) {}
     });
   });
+
+  describe('게시물 삭제', () => {
+    it('게시물이 존재 하지 않을 때 에러 반환', async () => {
+      const deleteBoardId = 99;
+      const userId = 1;
+      jest.spyOn(boardRepository, 'getBoardById').mockResolvedValue(undefined);
+
+      await expect(service.deleteBoard(userId, deleteBoardId)).rejects.toThrow(
+        new HttpException(
+          { message: '삭제할 게시물이 존재하지 않습니다.' },
+          HttpStatus.NOT_FOUND,
+        ),
+      );
+    });
+
+    it('게시물 작성 유저 Id와 로그인 한 유저의 Id와 다를 때 에러 반환', async () => {
+      const deleteBoardId = 1;
+      const userId = 1;
+
+      const deleteBoardDto = {
+        id: 1,
+        title: 'delete board',
+        content: 'delete board',
+        user: {
+          id: 3,
+          name: 'third user',
+          email: 'third@gmail.com',
+        },
+      } as Board;
+
+      jest
+        .spyOn(boardRepository, 'getBoardById')
+        .mockResolvedValue(deleteBoardDto);
+
+      await expect(service.deleteBoard(userId, boardId)).rejects.toThrow(
+        new HttpException(
+          {
+            message: '다른 유저의 게시물을 삭제할 수 없습니다.',
+          },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('게시물 삭제 성공시 메세지 반환', async () => {
+      const deleteBoardId = 1;
+      const userId = 1;
+
+      const deleteBoardDto = {
+        id: 1,
+        title: 'delete board',
+        content: 'delete board',
+        user: {
+          id: 1,
+          name: 'third user',
+          email: 'third@gmail.com',
+        },
+      } as Board;
+
+      jest
+        .spyOn(boardRepository, 'getBoardById')
+        .mockResolvedValue(deleteBoardDto);
+      jest.spyOn(boardRepository, 'deleteBoard').mockResolvedValue('');
+
+      const result = await service.deleteBoard(userId, boardId);
+
+      expect(result).toStrictEqual({ success: true });
+      expect(boardRepository.getBoardById).toHaveBeenCalledWith(boardId);
+      expect(boardRepository.deleteBoard).toHaveBeenCalledWith(userId, boardId);
+    });
+  });
 });

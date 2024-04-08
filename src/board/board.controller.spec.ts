@@ -145,4 +145,18 @@ describe('BoardController', () => {
       expect(result.content).toBe(updatedBoardDto.content);
     });
   });
+
+  describe('게시물 삭제', () => {
+    it('게시물 삭제 성공 시 메세지 반환', async () => {
+      const deleteBoardId = 1;
+      const userId = 1;
+
+      jest.spyOn(AuthGuard.prototype, 'canActivate').mockResolvedValue(true);
+      jest.spyOn(service, 'deleteBoard').mockResolvedValue({ success: true });
+
+      const result = await controller.deleteBoard(userId, deleteBoardId);
+
+      expect(result).toStrictEqual({ success: true });
+    });
+  });
 });
