@@ -4,6 +4,7 @@ import { UserRepository } from 'src/repositories/user.repository';
 import { Transactional } from 'typeorm-transactional';
 import { CreateBoardDto } from './dtos/createBoard.dto';
 import { Board } from 'src/entities/board.entity';
+import { UpdateBoardDto } from './dtos/updateBoard.dto';
 
 @Injectable()
 export class BoardService {
@@ -55,6 +56,32 @@ export class BoardService {
     userId: number,
     boardId: number,
   ) {
-    return 'aa';
+    const board = await this.boardRepository.getBoardById(boardId);
+    if (!board) {
+      throw new HttpException(
+        { message: '수정할 게시물이 존재하지 않습니다.' },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (userId !== board.user.id) {
+      throw new HttpException(
+        { message: '다른 유저의 게시물은 수정할 수 없습니다.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    try {
+      await this.boardRepository.updateBoard(updateBoardDto, boardId);
+    } catch (err) {
+      throw new HttpException(
+        { message: '게시물을 수정하는데 오류가 발생했습니다.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const updatedBoard = await this.boardRepository.getBoardById(boardId);
+
+    return updatedBoard;
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBoardDto } from 'src/board/dtos/createBoard.dto';
+import { UpdateBoardDto } from 'src/board/dtos/updateBoard.dto';
 import { Board } from 'src/entities/board.entity';
 import { DataSource, Repository } from 'typeorm';
 
@@ -33,5 +34,11 @@ export class BoardRepository extends Repository<Board> {
     const { title, content } = createBoardDto;
 
     return await this.create({ title, content, userId }).save();
+  }
+
+  async updateBoard(updateBoardDto: UpdateBoardDto, boardId: number) {
+    const { title, content } = updateBoardDto;
+
+    return this.update({ id: boardId }, { title, content });
   }
 }

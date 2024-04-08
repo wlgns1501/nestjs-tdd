@@ -3,16 +3,10 @@ import { BoardController } from './board.controller';
 import { BoardService } from './board.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { BoardRepository } from 'src/repositories/board.repository';
-import { Auth, DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
 import { AuthGuard } from 'src/guard/auth.guard';
-import {
-  CanActivate,
-  HttpException,
-  HttpStatus,
-  Request,
-} from '@nestjs/common';
-import { request } from 'express';
+import { CanActivate } from '@nestjs/common';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
@@ -50,6 +44,10 @@ describe('BoardController', () => {
     service = module.get<BoardService>(BoardService);
     userRepository = module.get<UserRepository>(UserRepository);
     boardRepository = module.get<BoardRepository>(BoardRepository);
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -118,16 +116,33 @@ describe('BoardController', () => {
         title: 'update Title',
         content: 'update Content',
       };
+
+      const updatedBoardDto = {
+        id: 1,
+        title: 'update Title',
+        content: 'update Content',
+        user: {
+          id: 1,
+          name: 'jihun',
+          email: 'wlgns1501@gmail.com',
+        },
+      } as Board;
       let req: any;
       const boardId = 1;
+      const userId = 1;
 
       jest.spyOn(AuthGuard.prototype, 'canActivate').mockResolvedValue(true);
+      jest.spyOn(service, 'updateBoard').mockResolvedValue(updatedBoardDto);
 
-      const result = await controller.updateBoard(updateBoardDto, req, boardId);
+      const result = await controller.updateBoard(
+        updateBoardDto,
+        userId,
+        boardId,
+      );
 
       expect(result.id).toBe(1);
-      expect(result.title).toBe(updateBoardDto.title);
-      expect(result.content).toBe(updateBoardDto.content);
+      expect(result.title).toBe(updatedBoardDto.title);
+      expect(result.content).toBe(updatedBoardDto.content);
     });
   });
 });

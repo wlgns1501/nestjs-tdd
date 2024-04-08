@@ -5,8 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +15,8 @@ import { BoardService } from './board.service';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { CreateBoardPipe } from './dtos/createBoard.pipe';
 import { CreateBoardDto } from './dtos/createBoard.dto';
+import { UpdateBoardDto } from './dtos/updateBoard.dto';
+import { UpdateBoardPipe } from './dtos/updateBoard.pipe';
 
 @ApiTags('board')
 @Controller('board')
@@ -28,13 +30,6 @@ export class BoardController {
     return await this.service.getBoards();
   }
 
-  @Get(':boardId')
-  @ApiOperation({ summary: '게시물 상세페이지' })
-  @HttpCode(HttpStatus.OK)
-  async getBoard(@Param('boardId') boardId: number) {
-    return await this.service.getBoard(boardId);
-  }
-
   @Post('')
   @ApiOperation({ summary: '게시물 생성' })
   @HttpCode(HttpStatus.CREATED)
@@ -46,7 +41,14 @@ export class BoardController {
     return await this.service.createBoard(createBoardDto, req.userId);
   }
 
-  @Put(':boardId')
+  @Get(':boardId')
+  @ApiOperation({ summary: '게시물 상세페이지' })
+  @HttpCode(HttpStatus.OK)
+  async getBoard(@Param('boardId') boardId: number) {
+    return await this.service.getBoard(boardId);
+  }
+
+  @Patch(':boardId')
   @ApiOperation({ summary: '게시물 수정' })
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)

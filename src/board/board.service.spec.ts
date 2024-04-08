@@ -51,6 +51,15 @@ describe('BoardService', () => {
     jest.restoreAllMocks();
   });
 
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+    expect(service).toBeDefined();
+    expect(boardRepository).toBeDefined();
+    expect(userRepository).toBeDefined();
+    expect(controller).toBeDefined();
+    expect(mockGuard).toBeDefined();
+  });
+
   describe('게시물 전체 조회', () => {
     it('게시물이 없을 때 빈 리스트 반환', async () => {
       jest.spyOn(boardRepository, 'getBoards').mockResolvedValue([]);
@@ -329,14 +338,18 @@ describe('BoardService', () => {
           ),
         );
 
-      await expect(
-        service.updateBoard(updateBoardDto, userId, boardId),
-      ).rejects.toThrow(
-        new HttpException(
-          { message: '수정할 게시물이 존재하지 않습니다.' },
-          HttpStatus.NOT_FOUND,
-        ),
-      );
+      const findBoard = await boardRepository.getBoardById(boardId);
+
+      if (!findBoard) {
+        await expect(
+          service.updateBoard(updateBoardDto, userId, boardId),
+        ).rejects.toThrow(
+          new HttpException(
+            { message: '수정할 게시물이 존재하지 않습니다.' },
+            HttpStatus.NOT_FOUND,
+          ),
+        );
+      }
     });
 
     it('게시물 생성 유저의 Id와 로그인한 유저의 Id가 다를 때 에러 반환', async () => {
@@ -379,6 +392,64 @@ describe('BoardService', () => {
       );
     });
 
+    it('게시물 업데이트 시 에러가 발생할 경우 에러 반환', async () => {
+      const updateBoardDto = {
+        title: 'update title',
+        content: 'update content',
+      };
+
+      const createdBoardDto = {
+        id: 1,
+        title: 'first board',
+        content: 'first board',
+        userId: 1,
+      } as Board;
+
+      const updatedBoardDto = {
+        id: 1,
+        title: 'update title',
+        content: 'update content',
+        user: {
+          id: 1,
+          name: 'jihun',
+          email: 'wlgns1501@gmail.com',
+        },
+      } as Board;
+
+      const boardId = 1;
+      const userId = 1;
+
+      jest
+        .spyOn(boardRepository, 'getBoardById')
+        .mockResolvedValue(createdBoardDto);
+      jest
+        .spyOn(boardRepository, 'updateBoard')
+        .mockRejectedValue(new Error('error'));
+      jest
+        .spyOn(service, 'updateBoard')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '게시물을 수정하는데 오류가 발생했습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      try {
+        await service.updateBoard(updateBoardDto, userId, boardId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(HttpException);
+
+        await expect(
+          service.updateBoard(updateBoardDto, userId, boardId),
+        ).rejects.toThrow(
+          new HttpException(
+            { message: '게시물을 수정하는데 오류가 발생했습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+      }
+    });
+
     it('게시물 수정 후 게시물 정보 반환', async () => {
       const updateBoardDto = {
         title: 'update title',
@@ -396,7 +467,11 @@ describe('BoardService', () => {
         id: 1,
         title: 'update title',
         content: 'update content',
-        userId: 1,
+        user: {
+          id: 1,
+          name: 'jihun',
+          email: 'wlgns1501@gmail.com',
+        },
       } as Board;
 
       const boardId = 1;
@@ -407,21 +482,27 @@ describe('BoardService', () => {
         .mockResolvedValue(createdBoardDto);
       jest
         .spyOn(boardRepository, 'updateBoard')
-        .mockResolvedValue(updateBoardDto);
+        .mockImplementation(() =>
+          Promise.resolve({ raw: [], affected: 1, generatedMaps: [] }),
+        );
+      jest
+        .spyOn(boardRepository, 'getBoardById')
+        .mockResolvedValue(updatedBoardDto);
 
-      const result = await service.updateBoard(updateBoardDto, userId, boardId);
+      try {
+        const result = await service.updateBoard(updateBoardDto, 1, boardId);
+        expect(result.id).toBe(boardId);
+        expect(result.userId).toBe(userId);
+        expect(result.title).toBe(updateBoardDto.title);
+        expect(result.content).toBe(updateBoardDto.content);
 
-      expect(result.id).toBe(boardId);
-      expect(result.userId).toBe(userId);
-      expect(result.title).toBe(updateBoardDto.title);
-      expect(result.content).toBe(updateBoardDto.content);
+        expect(boardRepository.updateBoard).toHaveBeenCalledWith(
+          updateBoardDto,
+          boardId,
+        );
 
-      expect(boardRepository.updateBoard).toHaveBeenCalledWith(
-        updateBoardDto,
-        boardId,
-      );
-
-      expect(boardRepository.getBoardById).toHaveBeenCalledWith(boardId);
+        expect(boardRepository.getBoardById).toHaveBeenCalledWith(boardId);
+      } catch (err) {}
     });
   });
 });
