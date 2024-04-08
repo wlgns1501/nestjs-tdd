@@ -517,7 +517,7 @@ describe('BoardService', () => {
         .spyOn(boardRepository, 'getBoardById')
         .mockResolvedValue(deleteBoardDto);
 
-      await expect(service.deleteBoard(userId, boardId)).rejects.toThrow(
+      await expect(service.deleteBoard(userId, deleteBoardId)).rejects.toThrow(
         new HttpException(
           {
             message: '다른 유저의 게시물을 삭제할 수 없습니다.',
@@ -545,13 +545,18 @@ describe('BoardService', () => {
       jest
         .spyOn(boardRepository, 'getBoardById')
         .mockResolvedValue(deleteBoardDto);
-      jest.spyOn(boardRepository, 'deleteBoard').mockResolvedValue('');
+      jest
+        .spyOn(boardRepository, 'deleteBoard')
+        .mockResolvedValue({ raw: [], affected: 1 });
 
-      const result = await service.deleteBoard(userId, boardId);
+      const result = await service.deleteBoard(userId, deleteBoardId);
 
       expect(result).toStrictEqual({ success: true });
-      expect(boardRepository.getBoardById).toHaveBeenCalledWith(boardId);
-      expect(boardRepository.deleteBoard).toHaveBeenCalledWith(userId, boardId);
+      expect(boardRepository.getBoardById).toHaveBeenCalledWith(deleteBoardId);
+      expect(boardRepository.deleteBoard).toHaveBeenCalledWith(
+        userId,
+        deleteBoardId,
+      );
     });
   });
 });

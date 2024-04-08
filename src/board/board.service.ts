@@ -107,6 +107,6 @@ export class BoardService {
 
     await this.boardRepository.deleteBoard(userId, boardId);
 
-    return { sueccess: true };
+    return { success: true };
   }
 }
