@@ -329,27 +329,15 @@ describe('BoardService', () => {
       const userId = 1;
 
       jest.spyOn(boardRepository, 'getBoardById').mockResolvedValue(undefined);
-      jest
-        .spyOn(service, 'updateBoard')
-        .mockRejectedValue(
-          new HttpException(
-            { message: '수정할 게시물이 존재하지 않습니다.' },
-            HttpStatus.NOT_FOUND,
-          ),
-        );
 
-      const findBoard = await boardRepository.getBoardById(boardId);
-
-      if (!findBoard) {
-        await expect(
-          service.updateBoard(updateBoardDto, userId, boardId),
-        ).rejects.toThrow(
-          new HttpException(
-            { message: '수정할 게시물이 존재하지 않습니다.' },
-            HttpStatus.NOT_FOUND,
-          ),
-        );
-      }
+      await expect(
+        service.updateBoard(updateBoardDto, userId, boardId),
+      ).rejects.toThrow(
+        new HttpException(
+          { message: '수정할 게시물이 존재하지 않습니다.' },
+          HttpStatus.NOT_FOUND,
+        ),
+      );
     });
 
     it('게시물 생성 유저의 Id와 로그인한 유저의 Id가 다를 때 에러 반환', async () => {
@@ -362,23 +350,19 @@ describe('BoardService', () => {
         id: 1,
         title: 'first board',
         content: 'first board',
-        userId: 1,
+        user: {
+          id: 2,
+          name: 'second user',
+          email: 'second@gmai.com',
+        },
       } as Board;
 
       const boardId = 1;
-      const userId = 2;
+      const userId = 1;
 
       jest
         .spyOn(boardRepository, 'getBoardById')
         .mockResolvedValue(createdBoardDto);
-      jest.spyOn(service, 'updateBoard').mockRejectedValue(
-        new HttpException(
-          {
-            message: '다른 유저의 게시물은 수정할 수 없습니다.',
-          },
-          HttpStatus.BAD_REQUEST,
-        ),
-      );
 
       await expect(
         service.updateBoard(updateBoardDto, userId, boardId),
@@ -402,7 +386,11 @@ describe('BoardService', () => {
         id: 1,
         title: 'first board',
         content: 'first board',
-        userId: 1,
+        user: {
+          id: 1,
+          name: 'jihun',
+          email: 'wlgns1501@gmail.com',
+        },
       } as Board;
 
       const updatedBoardDto = {
@@ -425,20 +413,10 @@ describe('BoardService', () => {
       jest
         .spyOn(boardRepository, 'updateBoard')
         .mockRejectedValue(new Error('error'));
-      jest
-        .spyOn(service, 'updateBoard')
-        .mockRejectedValue(
-          new HttpException(
-            { message: '게시물을 수정하는데 오류가 발생했습니다.' },
-            HttpStatus.BAD_REQUEST,
-          ),
-        );
 
       try {
         await service.updateBoard(updateBoardDto, userId, boardId);
       } catch (err) {
-        expect(err).toBeInstanceOf(HttpException);
-
         await expect(
           service.updateBoard(updateBoardDto, userId, boardId),
         ).rejects.toThrow(
