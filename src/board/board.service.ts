@@ -48,4 +48,13 @@ export class BoardService {
 
     return { boardId: createdBoard.id };
   }
+
+  @Transactional()
+  async updateBoard(
+    updateBoardDto: UpdateBoardDto,
+    userId: number,
+    boardId: number,
+  ) {
+    return 'aa';
+  }
 }

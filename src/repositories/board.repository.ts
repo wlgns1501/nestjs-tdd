@@ -13,7 +13,7 @@ export class BoardRepository extends Repository<Board> {
     return await this.find();
   }
 
-  async getBoardById(boardId: number) {
+  async getBoardById(boardId: number): Promise<Board | undefined> {
     return await this.createQueryBuilder('b')
       .select([
         'b.id as id',

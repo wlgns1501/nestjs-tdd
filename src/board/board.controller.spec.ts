@@ -6,7 +6,13 @@ import { BoardRepository } from 'src/repositories/board.repository';
 import { Auth, DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
 import { AuthGuard } from 'src/guard/auth.guard';
-import { CanActivate, Request } from '@nestjs/common';
+import {
+  CanActivate,
+  HttpException,
+  HttpStatus,
+  Request,
+} from '@nestjs/common';
+import { request } from 'express';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
@@ -23,7 +29,7 @@ describe('BoardController', () => {
   };
 
   beforeEach(async () => {
-    mockGuard = { canActivate: jest.fn(() => true) };
+    mockGuard = { canActivate: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BoardController],
       providers: [
@@ -103,6 +109,25 @@ describe('BoardController', () => {
       const result = await controller.createBoard(createdBoardDto, userId);
 
       expect(result).toEqual({ boardId: 1 });
+    });
+  });
+
+  describe('게시물 수정 /board', () => {
+    it('게시물 수정 성공시 게시물 반환', async () => {
+      const updateBoardDto = {
+        title: 'update Title',
+        content: 'update Content',
+      };
+      let req: any;
+      const boardId = 1;
+
+      jest.spyOn(AuthGuard.prototype, 'canActivate').mockResolvedValue(true);
+
+      const result = await controller.updateBoard(updateBoardDto, req, boardId);
+
+      expect(result.id).toBe(1);
+      expect(result.title).toBe(updateBoardDto.title);
+      expect(result.content).toBe(updateBoardDto.content);
     });
   });
 });

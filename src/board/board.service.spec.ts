@@ -4,9 +4,10 @@ import { BoardRepository } from 'src/repositories/board.repository';
 import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { CanActivate, HttpException, HttpStatus } from '@nestjs/common';
 import { BoardController } from './board.controller';
 import { CreateBoardDto } from './dtos/createBoard.dto';
+import { AuthGuard } from 'src/guard/auth.guard';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
@@ -17,11 +18,13 @@ describe('BoardService', () => {
   let controller: BoardController;
   let userRepository: UserRepository;
   let boardRepository: BoardRepository;
+  let mockGuard: CanActivate;
   const dataSource = {
     createEntityManager: jest.fn(),
   };
 
   beforeEach(async () => {
+    mockGuard = { canActivate: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BoardService,
@@ -33,7 +36,10 @@ describe('BoardService', () => {
         UserRepository,
       ],
       controllers: [BoardController],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard)
+      .useValue(mockGuard)
+      .compile();
 
     service = module.get<BoardService>(BoardService);
     controller = module.get<BoardController>(BoardController);
@@ -243,6 +249,179 @@ describe('BoardService', () => {
         });
         expect(result.boardId).toEqual(1);
       } catch (err) {}
+    });
+  });
+
+  describe('게시물 수정', () => {
+    it('게시물 title이 존재 하지 않을때 에러 반환', async () => {
+      const notTitleBoardDto = {
+        title: '',
+        content: 'first board',
+        userId: 1,
+      };
+      const boardId = 1;
+      const userId = 1;
+
+      jest
+        .spyOn(service, 'updateBoard')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '제목을 입력하지 않았습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(
+        service.updateBoard(notTitleBoardDto, userId, boardId),
+      ).rejects.toThrow(
+        new HttpException(
+          { message: '제목을 입력하지 않았습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('게시물 본문이 존재 하지 않을때 에러 반환', async () => {
+      const notContentBoardDto = {
+        title: 'first board',
+        content: '',
+        userId: 1,
+      };
+
+      const boardId = 1;
+      const userId = 1;
+
+      jest
+        .spyOn(service, 'updateBoard')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '본문을 입력하지 않았습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+
+      await expect(
+        service.updateBoard(notContentBoardDto, userId, boardId),
+      ).rejects.toThrow(
+        new HttpException(
+          { message: '본문을 입력하지 않았습니다.' },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('수정할 게시물이 존재하지 않을때 에러 반환', async () => {
+      const updateBoardDto = {
+        title: 'update title',
+        content: 'update content',
+      };
+
+      const boardId = 99;
+      const userId = 1;
+
+      jest.spyOn(boardRepository, 'getBoardById').mockResolvedValue(undefined);
+      jest
+        .spyOn(service, 'updateBoard')
+        .mockRejectedValue(
+          new HttpException(
+            { message: '수정할 게시물이 존재하지 않습니다.' },
+            HttpStatus.NOT_FOUND,
+          ),
+        );
+
+      await expect(
+        service.updateBoard(updateBoardDto, userId, boardId),
+      ).rejects.toThrow(
+        new HttpException(
+          { message: '수정할 게시물이 존재하지 않습니다.' },
+          HttpStatus.NOT_FOUND,
+        ),
+      );
+    });
+
+    it('게시물 생성 유저의 Id와 로그인한 유저의 Id가 다를 때 에러 반환', async () => {
+      const updateBoardDto = {
+        title: 'update title',
+        content: 'update content',
+      };
+
+      const createdBoardDto = {
+        id: 1,
+        title: 'first board',
+        content: 'first board',
+        userId: 1,
+      } as Board;
+
+      const boardId = 1;
+      const userId = 2;
+
+      jest
+        .spyOn(boardRepository, 'getBoardById')
+        .mockResolvedValue(createdBoardDto);
+      jest.spyOn(service, 'updateBoard').mockRejectedValue(
+        new HttpException(
+          {
+            message: '다른 유저의 게시물은 수정할 수 없습니다.',
+          },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+
+      await expect(
+        service.updateBoard(updateBoardDto, userId, boardId),
+      ).rejects.toThrow(
+        new HttpException(
+          {
+            message: '다른 유저의 게시물은 수정할 수 없습니다.',
+          },
+          HttpStatus.BAD_REQUEST,
+        ),
+      );
+    });
+
+    it('게시물 수정 후 게시물 정보 반환', async () => {
+      const updateBoardDto = {
+        title: 'update title',
+        content: 'update content',
+      };
+
+      const createdBoardDto = {
+        id: 1,
+        title: 'first board',
+        content: 'first board',
+        userId: 1,
+      } as Board;
+
+      const updatedBoardDto = {
+        id: 1,
+        title: 'update title',
+        content: 'update content',
+        userId: 1,
+      } as Board;
+
+      const boardId = 1;
+      const userId = 1;
+
+      jest
+        .spyOn(boardRepository, 'getBoardById')
+        .mockResolvedValue(createdBoardDto);
+      jest
+        .spyOn(boardRepository, 'updateBoard')
+        .mockResolvedValue(updateBoardDto);
+
+      const result = await service.updateBoard(updateBoardDto, userId, boardId);
+
+      expect(result.id).toBe(boardId);
+      expect(result.userId).toBe(userId);
+      expect(result.title).toBe(updateBoardDto.title);
+      expect(result.content).toBe(updateBoardDto.content);
+
+      expect(boardRepository.updateBoard).toHaveBeenCalledWith(
+        updateBoardDto,
+        boardId,
+      );
+
+      expect(boardRepository.getBoardById).toHaveBeenCalledWith(boardId);
     });
   });
 });

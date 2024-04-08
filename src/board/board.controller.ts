@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -43,5 +44,17 @@ export class BoardController {
     @Req() req: any,
   ) {
     return await this.service.createBoard(createBoardDto, req.userId);
+  }
+
+  @Put(':boardId')
+  @ApiOperation({ summary: '게시물 수정' })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  async updateBoard(
+    @Body(new UpdateBoardPipe()) updateBoardDto: UpdateBoardDto,
+    @Req() req: any,
+    @Param('boardId') boardId: number,
+  ) {
+    return this.service.updateBoard(updateBoardDto, req.userId, boardId);
   }
 }
