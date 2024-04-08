@@ -3,12 +3,10 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserRepository } from 'src/repositories/user.repository';
-import { CreatedUserDto } from './dtos/createdUser.dto';
 import { DataSource, QueryFailedError } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
-import { error } from 'console';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),

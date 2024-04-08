@@ -3,10 +3,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+import { Board } from './board.entity';
 
 @Entity()
 @Unique(['email'])
@@ -28,4 +30,7 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn({ comment: 'updatedAt', name: 'updated_at' })
   updated_at: Date;
+
+  @OneToMany(() => Board, (board) => board.user)
+  boards: Board[];
 }
