@@ -3,10 +3,10 @@ import { BoardController } from './board.controller';
 import { BoardService } from './board.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { BoardRepository } from 'src/repositories/board.repository';
-import { Auth, DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
 import { AuthGuard } from 'src/guard/auth.guard';
-import { CanActivate, Request } from '@nestjs/common';
+import { CanActivate } from '@nestjs/common';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
@@ -23,7 +23,7 @@ describe('BoardController', () => {
   };
 
   beforeEach(async () => {
-    mockGuard = { canActivate: jest.fn(() => true) };
+    mockGuard = { canActivate: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BoardController],
       providers: [
@@ -44,6 +44,10 @@ describe('BoardController', () => {
     service = module.get<BoardService>(BoardService);
     userRepository = module.get<UserRepository>(UserRepository);
     boardRepository = module.get<BoardRepository>(BoardRepository);
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -103,6 +107,56 @@ describe('BoardController', () => {
       const result = await controller.createBoard(createdBoardDto, userId);
 
       expect(result).toEqual({ boardId: 1 });
+    });
+  });
+
+  describe('게시물 수정 /board', () => {
+    it('게시물 수정 성공시 게시물 반환', async () => {
+      const updateBoardDto = {
+        title: 'update Title',
+        content: 'update Content',
+      };
+
+      const updatedBoardDto = {
+        id: 1,
+        title: 'update Title',
+        content: 'update Content',
+        user: {
+          id: 1,
+          name: 'jihun',
+          email: 'wlgns1501@gmail.com',
+        },
+      } as Board;
+      let req: any;
+      const boardId = 1;
+      const userId = 1;
+
+      jest.spyOn(AuthGuard.prototype, 'canActivate').mockResolvedValue(true);
+      jest.spyOn(service, 'updateBoard').mockResolvedValue(updatedBoardDto);
+
+      const result = await controller.updateBoard(
+        updateBoardDto,
+        userId,
+        boardId,
+      );
+
+      expect(result.id).toBe(1);
+      expect(result.title).toBe(updatedBoardDto.title);
+      expect(result.content).toBe(updatedBoardDto.content);
+    });
+  });
+
+  describe('게시물 삭제', () => {
+    it('게시물 삭제 성공 시 메세지 반환', async () => {
+      const deleteBoardId = 1;
+      const userId = 1;
+
+      jest.spyOn(AuthGuard.prototype, 'canActivate').mockResolvedValue(true);
+      jest.spyOn(service, 'deleteBoard').mockResolvedValue({ success: true });
+
+      const result = await controller.deleteBoard(userId, deleteBoardId);
+
+      expect(result).toStrictEqual({ success: true });
     });
   });
 });

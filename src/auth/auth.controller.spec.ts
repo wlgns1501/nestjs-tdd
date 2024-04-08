@@ -5,10 +5,6 @@ import { AuthService } from './auth.service';
 import { UserRepository } from 'src/repositories/user.repository';
 import { DataSource } from 'typeorm';
 import { Response, response } from 'express';
-import {
-  initializeTransactionalContext,
-  addTransactionalDataSource,
-} from 'typeorm-transactional';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
