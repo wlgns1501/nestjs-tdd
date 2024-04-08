@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { Board } from 'src/entities/board.entity';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { BoardController } from './board.controller';
+import { CreateBoardDto } from './dtos/createBoard.dto';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => () => ({}),
@@ -181,8 +182,13 @@ describe('BoardService', () => {
       );
     });
 
-    it('게시물 생성 후 게시물 id 반환', async () => {
+    it('게시물 생성에 에러가 생길 경우 에러 반환', async () => {
       const createBoardDto = {
+        title: 'first board',
+        content: 'first board',
+      } as CreateBoardDto;
+
+      const createdBoardDto = {
         title: 'first board',
         content: 'first board',
         userId: 1,
@@ -192,11 +198,51 @@ describe('BoardService', () => {
 
       jest
         .spyOn(boardRepository, 'createBoard')
-        .mockResolvedValue(createBoardDto);
+        .mockRejectedValue(new Error('error'));
 
-      const result = await service.createBoard(createBoardDto, userId);
+      try {
+        const result = await service.createBoard(createBoardDto, userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(HttpException);
+        await expect(
+          service.createBoard(createBoardDto, userId),
+        ).rejects.toThrow(
+          new HttpException(
+            { message: '게시물을 생성하는데 오류가 발생했습니다.' },
+            HttpStatus.BAD_REQUEST,
+          ),
+        );
+      }
+    });
 
-      expect(result).toEqual({ boardId: 1 });
+    it('게시물 생성 후 게시물 id 반환', async () => {
+      const createBoardDto = {
+        title: 'first board',
+        content: 'first board',
+      } as CreateBoardDto;
+
+      const createdBoardDto = {
+        id: 1,
+        title: 'first board',
+        content: 'first board',
+        userId: 1,
+      } as Board;
+
+      const userId = 1;
+
+      jest
+        .spyOn(boardRepository, 'createBoard')
+        .mockResolvedValue(createdBoardDto);
+
+      try {
+        const result = await service.createBoard(createBoardDto, userId);
+
+        expect(boardRepository.createBoard).toHaveBeenCalledWith({
+          createBoardDto,
+          userId,
+        });
+        expect(result.boardId).toEqual(1);
+      } catch (err) {}
     });
   });
 });

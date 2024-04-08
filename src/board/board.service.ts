@@ -40,7 +40,10 @@ export class BoardService {
         userId,
       );
     } catch (err) {
-      console.log(err);
+      throw new HttpException(
+        { message: '게시물을 생성하는데 오류가 발생했습니다.' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     return { boardId: createdBoard.id };
