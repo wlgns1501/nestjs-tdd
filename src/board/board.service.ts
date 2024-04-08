@@ -84,4 +84,29 @@ export class BoardService {
 
     return updatedBoard;
   }
+
+  @Transactional()
+  async deleteBoard(userId: number, boardId: number) {
+    const board = await this.boardRepository.getBoardById(boardId);
+
+    if (!board) {
+      throw new HttpException(
+        {
+          message: '삭제할 게시물이 존재하지 않습니다.',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (userId !== board.user.id) {
+      throw new HttpException(
+        { message: '다른 유저의 게시물을 삭제할 수 없습니다.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.boardRepository.deleteBoard(userId, boardId);
+
+    return { sueccess: true };
+  }
 }

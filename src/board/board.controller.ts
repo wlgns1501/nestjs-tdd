@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -58,5 +59,13 @@ export class BoardController {
     @Param('boardId') boardId: number,
   ) {
     return this.service.updateBoard(updateBoardDto, req.userId, boardId);
+  }
+
+  @Delete(':boardId')
+  @ApiOperation({ summary: '게시물 삭제' })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  async deleteBoard(@Param('boardId') boardId: number, @Req() req: any) {
+    return this.service.deleteBoard(req.userId, boardId);
   }
 }

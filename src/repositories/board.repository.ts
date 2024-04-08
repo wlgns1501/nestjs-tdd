@@ -41,4 +41,8 @@ export class BoardRepository extends Repository<Board> {
 
     return this.update({ id: boardId }, { title, content });
   }
+
+  async deleteBoard(userId: number, boardId: number) {
+    return this.delete({ id: boardId, userId });
+  }
 }
