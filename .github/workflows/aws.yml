@@ -59,11 +59,19 @@ jobs:
           DOCKER_USERNAME : ${{secrets.DOCKERHUB_USERNAME}}
           DOCKER_PASSWORD : ${{secrets.DOCKERHUB_PASSWORD}}
 
-      - name : build the docker image
-        run : docker build -t nest-tdd .
+      - name : build and push
+        id : docker_build
+        uses : docker/build-push-action@v3
+        with :
+          push : true
+          tags : ${{env.DOCKER.IMAGE}}:latest
 
-      - name : taging
-        run : docker tag nest-tdd:latest jihun/nest-tdd:latest
 
-      - name : push to dockerhub
-        run : docker push jihun/nest-tdd:latest
+      # - name : build the docker image
+      #   run : docker build -t nest-tdd .
+
+      # - name : taging
+      #   run : docker tag nest-tdd:latest jihun/nest-tdd:latest
+
+      # - name : push to dockerhub
+      #   run : docker push jihun/nest-tdd:latest
