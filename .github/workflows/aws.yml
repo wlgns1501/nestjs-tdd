@@ -75,10 +75,10 @@ jobs:
 
 
       - name : build the docker image
-        run : docker build -t nest-tdd .
+        run : docker build -t nestjs-tdd .
 
       - name : taging
-        run : docker tag nest-tdd:latest jihun/nest-tdd:latest
+        run : docker tag nestjs-tdd:latest jihun/nestjs-tdd:latest
 
       - name : push to dockerhub
-        run : docker push jihun/nest-tdd:latest
+        run : docker push jihun/nestjs-tdd:latest
