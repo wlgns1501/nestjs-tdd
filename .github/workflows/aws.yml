@@ -1,0 +1,27 @@
+name : build
+
+on : 
+  push :
+    branches : [ "main" ]
+
+jobs:
+
+  build :
+    runs-on : ubuntu-latest
+
+    steps:
+      - uses : actions/checkout@v3
+      - name : Login DockerHub
+        env :
+          DOCKER_USERNAME : ${{secrets.DOCKERHUB_USERNAME}}
+          DOCKER_PASSWORD : ${{secrets.DOCKERHUB_PASSWORD}}
+        run : docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+      - name : build the docker image
+        run : docker build -t nest-tdd .
+
+      - name : taging
+        run : docker tag nest-tdd:latest jihun/nest-tdd:latest
+
+      - name : push to dockerhub
+        run : docker push jihun/nest-tdd:latest
