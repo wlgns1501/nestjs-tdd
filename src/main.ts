@@ -29,7 +29,9 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   await app.listen(3000, () => {
-    process.send('ready');
+    if (typeof process.send === 'function') {
+      process.send('ready');
+    }
     console.log('application is listening on port 3000');
   });
 }
