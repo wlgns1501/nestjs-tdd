@@ -107,6 +107,8 @@ jobs:
               sudo su
               docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
               docker pull wlgns1501/nestjs-tdd:latest
+              ls
+              cd nestjs-tdd
               docker-compose -f ./docker-compose.yml up -d
             
     
