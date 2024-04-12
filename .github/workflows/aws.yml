@@ -86,4 +86,4 @@ jobs:
         run : docker tag nestjs-tdd:latest jihun/nestjs-tdd:latest
 
       - name : push to dockerhub
-        run : docker push jihun/nestjs-tdd:latest
+        run : docker push wlgns1501/nestjs-tdd:latest
