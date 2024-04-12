@@ -1,6 +1,6 @@
 FROM node:16-alpine As development
 
-WORKDIR /Documents/nest-tdd
+WORKDIR /app/nest-tdd
 
 COPY package*.json ./
 
@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-CMD ['node', 'dist/main.js']
+CMD ['node']
 
 EXPOSE 3000
 

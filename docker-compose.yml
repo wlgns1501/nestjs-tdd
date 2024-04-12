@@ -1,0 +1,19 @@
+services:
+  nestjs-tdd:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./config/.env
+
+  mysql_db:
+    image: mysql
+    ports:
+      - '3307:3307'
+    env_file:
+      - ./config/.env
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
