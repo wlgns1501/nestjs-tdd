@@ -51,34 +51,34 @@ jobs:
     runs-on : ubuntu-latest
 
     steps:
-      - name : dockerhub check
-        run : |
-          echo ${{ secrets.DOCKERHUB_USERNAME }}
-          echo ${{ secrets.DOCKERHUB_PASSWORD }}
+      # - name : dockerhub check
+      #   run : |
+      #     echo ${{ secrets.DOCKERHUB_USERNAME }}
+      #     echo ${{ secrets.DOCKERHUB_PASSWORD }}
     
       - uses : actions/checkout@v3
       
-      - name : Login DockerHub
-        uses : docker/login-action@v2
-        with :
-          DOCKER_USERNAME : ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_PASSWORD : ${{ secrets.DOCKERHUB_PASSWORD }}
+      # - name : Login DockerHub
+      #   uses : docker/login-action@v2
+      #   with :
+      #     DOCKER_USERNAME : ${{ secrets.DOCKERHUB_USERNAME }}
+      #     DOCKER_PASSWORD : ${{ secrets.DOCKERHUB_PASSWORD }}
       
           
 
-      - name : build and push
-        id : docker_build
-        uses : docker/build-push-action@v3
-        with :
-          push : true
-          tags : ${{ env.DOCKER.IMAGE }}:latest
+      # - name : build and push
+      #   id : docker_build
+      #   uses : docker/build-push-action@v3
+      #   with :
+      #     push : true
+      #     tags : ${{ env.DOCKER.IMAGE }}:latest
 
 
-      # - name : build the docker image
-      #   run : docker build -t nest-tdd .
+      - name : build the docker image
+        run : docker build -t nest-tdd .
 
-      # - name : taging
-      #   run : docker tag nest-tdd:latest jihun/nest-tdd:latest
+      - name : taging
+        run : docker tag nest-tdd:latest jihun/nest-tdd:latest
 
-      # - name : push to dockerhub
-      #   run : docker push jihun/nest-tdd:latest
+      - name : push to dockerhub
+        run : docker push jihun/nest-tdd:latest
