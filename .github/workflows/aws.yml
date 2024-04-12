@@ -101,7 +101,7 @@ jobs:
           with :
             host : ${{ secrets.EC2_HOST }}
             username : ubuntu
-            key : ${{ secrets.EC2_ACCESS_KEY }}
+            key : ${{ secrets.EC2_ACCESS_TOKEN }}
             port: 22
             script : |
               sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
