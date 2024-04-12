@@ -6,7 +6,44 @@ on :
 
 jobs:
 
+  test :
+    runs-on : ubuntu-latest
+
+    steps:
+      - name : checkout Source code
+        uses : actions/checkout@v3
+
+      - name : setup node.js 16.x
+        uses : actions/setup-node@v3
+        with :
+          node-version : 16.x
+          cache : npm
+
+      - name : create config folder
+        run : |
+                mkdir config
+                
+      - name: create env file
+        working-directory : ./config
+        run: |
+          echo "${{ secrets.ENV }}" > dev.env
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        id: cache
+        with:
+            path: node_modules
+            key: npm-packages-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name : test
+        run : npm run test
+    
   build :
+    needs : test
     runs-on : ubuntu-latest
 
     steps:
