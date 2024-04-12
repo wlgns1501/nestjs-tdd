@@ -26,7 +26,7 @@ jobs:
       - name: create env file
         working-directory : ./config
         run: |
-          echo "${{ secrets.ENV }}" > dev.env
+          echo "${{ secrets.ENV }}" > .env
 
       - name: Cache node modules
         uses: actions/cache@v3
