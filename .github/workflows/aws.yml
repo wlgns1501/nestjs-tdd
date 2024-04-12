@@ -73,6 +73,11 @@ jobs:
       #     push : true
       #     tags : ${{ env.DOCKER.IMAGE }}:latest
 
+      - name : docker hub login
+        env : 
+          DOCKER_USERNAME : ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD : ${{ secrets.DOCKERHUB_PASSWORD }}
+        run : docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
       - name : build the docker image
         run : docker build -t nestjs-tdd .
