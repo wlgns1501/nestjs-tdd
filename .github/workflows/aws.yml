@@ -94,7 +94,7 @@ jobs:
 
     steps:
         - name : check out
-        - uses : actions/checkout@v3
+          uses : actions/checkout@v3
 
         - name: EC2 docker run
           uses : appleboy/ssh-action@v0.1.8
