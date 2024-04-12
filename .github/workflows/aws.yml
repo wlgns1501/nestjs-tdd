@@ -51,6 +51,11 @@ jobs:
     runs-on : ubuntu-latest
 
     steps:
+      - name : dockerhub check
+        run : |
+          echo ${{ secrets.DOCKERHUB_USERNAME }}
+          echo ${{ secrets.DOCKERHUB_PASSWORD }}
+    
       - uses : actions/checkout@v3
       
       - name : Login DockerHub
@@ -58,9 +63,7 @@ jobs:
         with :
           DOCKER_USERNAME : ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_PASSWORD : ${{ secrets.DOCKERHUB_PASSWORD }}
-        run : |
-          echo ${{ secrets.DOCKERHUB_USERNAME }}
-          echo ${{ secrets.DOCKERHUB_PASSWORD }}
+      
           
 
       - name : build and push
