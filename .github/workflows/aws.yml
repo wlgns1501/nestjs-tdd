@@ -83,7 +83,7 @@ jobs:
         run : docker build -t nestjs-tdd .
 
       - name : taging
-        run : docker tag nestjs-tdd:latest jihun/nestjs-tdd:latest
+        run : docker tag nestjs-tdd:latest wlgns1501/nestjs-tdd:latest
 
       - name : push to dockerhub
         run : docker push wlgns1501/nestjs-tdd:latest
