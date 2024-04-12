@@ -4,6 +4,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './lib/exception-filter';
 import * as CookieParser from 'cookie-parser';
 import { initializeTransactionalContext } from 'typeorm-transactional';
+import { SetResponseHeader } from './middlewares/set-response-header.middleware';
+import { GlobalService } from './lib/globalservice';
 
 async function bootstrap() {
   initializeTransactionalContext();
@@ -18,8 +20,17 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, document);
 
+  GlobalService.isDisableKeepAlive = false;
+
   app.useGlobalFilters(new HttpExceptionFilter());
   app.use(CookieParser('dd'));
-  await app.listen(3000);
+  app.use(SetResponseHeader);
+
+  app.enableShutdownHooks();
+
+  await app.listen(3000, () => {
+    process.send('ready');
+    console.log('application is listening on port 3000');
+  });
 }
 bootstrap();
