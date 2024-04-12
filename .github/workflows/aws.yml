@@ -104,8 +104,8 @@ jobs:
             key : ${{ secrets.EC2_ACCESS_KEY }}
             port: 22
             script : |
-              docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-              docker pull wlgns1501/nestjs-tdd:latest
-              docker-compose -f ./docker-compose.yml up -d
+              sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+              sudo docker pull wlgns1501/nestjs-tdd:latest
+              sudo docker-compose -f ./docker-compose.yml up -d
             
     
