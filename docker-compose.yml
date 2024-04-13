@@ -11,7 +11,7 @@ services:
   mysql_db:
     image: mysql
     ports:
-      - '3307:3307'
+      - '3306:3306'
     env_file:
       - ./config/.env
     command:
