@@ -60,7 +60,7 @@ jobs:
         with :
           contenxt : .
           push : true
-          tags : wlgns1501/nestjs-tdd:latest
+          tags : wlgns1501/nestjs-tdd:lasest
           
   deploy: 
     needs: build
