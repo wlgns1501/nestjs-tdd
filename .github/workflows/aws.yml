@@ -102,6 +102,7 @@ jobs:
             script : |
               sudo su
               cd nestjs-tdd
+              echo -e `ls \n`
               docker-compose pull -q
               docker-compose -f ./docker-compose.yml up -d
             
