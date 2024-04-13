@@ -6,14 +6,14 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - ./config/.env
+      - ./.env
 
   mysql_db:
     image: mysql
     ports:
       - '3306:3306'
     env_file:
-      - ./config/.env
+      - ./.env
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
