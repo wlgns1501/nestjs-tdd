@@ -3,9 +3,6 @@ version: '3'
 services:
   nestjs-tdd:
     image: nestjs-tdd
-    build:
-      context: .
-      dockerfile: ./dockerfile
     ports:
       - '3000:3000'
     env_file:
