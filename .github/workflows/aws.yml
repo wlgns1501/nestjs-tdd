@@ -110,6 +110,11 @@ jobs:
           run : |
             ls
             
+        - name : cat .env
+          run : |
+            cat .env
+            docker-compose config
+
 
         - name: EC2 docker run
           uses : appleboy/ssh-action@v0.1.8
