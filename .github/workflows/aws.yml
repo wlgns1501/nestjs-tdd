@@ -96,6 +96,6 @@ jobs:
             script : |
               sudo service docker restart
               cd nestjs-tdd
-              sudo docker pull wlgns1501/nestjs-tdd:lasest
+              sudo docker-compose pull wlgns1501/nestjs-tdd:lasest
               sudo docker-compose -f ./docker-compose.yml up -d
     
