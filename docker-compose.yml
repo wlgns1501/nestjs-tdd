@@ -7,8 +7,6 @@ services:
       - '3000:3000'
     env_file:
       - ./.env
-    networks:
-      - test1net
 
   mysql_db:
     image: mysql
@@ -19,8 +17,3 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-    networks:
-      - test1net
-
-networks:
-  test1net:
