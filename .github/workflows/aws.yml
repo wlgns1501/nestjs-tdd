@@ -74,7 +74,7 @@ jobs:
       - name : build and push
         uses : docker/build-push-action@v3
         with :
-          contenxt : .
+          context : .
           push : true
           tags : wlgns1501/nestjs-tdd:lasest
           
