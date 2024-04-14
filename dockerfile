@@ -8,12 +8,12 @@ RUN npm install
 
 COPY . .
 
-COPY ./config/.env /app/nest-tdd/config
+COPY ./config/.env /app/nest-tdd/config/.env
 
 RUN npm run build
 
-CMD ['node']
 
 EXPOSE 3000
 
-ENTRYPOINT npm run start:dev
+
+CMD ['npm', 'run', 'start:dev']
