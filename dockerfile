@@ -14,7 +14,7 @@ COPY ./config/.env /app/nest-tdd/config/.env
 
 RUN npm run build
 
-CMD ['node', 'main.js']
+CMD ['pm2-runtime', 'main.js']
 
 EXPOSE 3000
 
