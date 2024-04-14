@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+COPY ./config/.env /app/nest-tdd/config
+
 RUN npm run build
 
 CMD ['node']
