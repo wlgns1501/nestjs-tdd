@@ -16,4 +16,4 @@ CMD ['node']
 
 EXPOSE 3000
 
-ENTRYPOINT npm run start:dev
+ENTRYPOINT npm run deploy
