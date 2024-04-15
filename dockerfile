@@ -12,6 +12,8 @@ COPY . .
 
 COPY ./config/.env /app/nest-tdd/config/.env
 
+COPY .env .env
+
 RUN npm run build
 
 EXPOSE 3000
