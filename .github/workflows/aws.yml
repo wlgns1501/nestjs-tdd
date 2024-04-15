@@ -93,6 +93,15 @@ jobs:
         - name: create docker env file
           run: |
             echo "${{ secrets.DOCKER_ENV }}" > .env
+
+        - name : create config folder
+          run : |
+                mkdir config
+                
+        - name: create env file
+          working-directory : ./config
+          run: |
+            echo "${{ secrets.ENV }}" > .env
     
         - name : ls
           run : |
