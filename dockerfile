@@ -12,7 +12,7 @@ COPY . .
 
 COPY ./config/.env /app/nest-tdd/config/.env
 
-COPY .env .env
+COPY .env .
 
 RUN npm run build
 
