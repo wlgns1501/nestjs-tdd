@@ -2,6 +2,7 @@ version: '3'
 
 services:
   nestjs-tdd:
+    container_name: nestjs-tdd
     image: wlgns1501/nestjs-tdd:lasest
     ports:
       - '3000:3000'
@@ -9,7 +10,8 @@ services:
       - ./.env
 
   mysql_db:
-    image: mysql
+    container_name: mysql
+    image: mysql:8.0.3
     ports:
       - '3307:3306'
     env_file:
