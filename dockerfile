@@ -8,6 +8,8 @@ RUN npm install
 
 RUN npm install pm2 -g
 
+RUN apk update && apk add mysql-client
+
 COPY . .
 
 COPY ./config/.env /app/nest-tdd/config/.env
