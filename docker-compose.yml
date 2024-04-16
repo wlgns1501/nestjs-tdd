@@ -10,6 +10,8 @@ services:
       - ./config/.env
     depends_on:
       - mysql_db
+    networks:
+      - backend-network
 
   mysql_db:
     container_name: mysql
@@ -21,3 +23,9 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge
